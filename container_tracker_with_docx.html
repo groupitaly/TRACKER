@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Container Tracker — Stone Import</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a;background:#f5f5f3;min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:1.5rem 1rem}
+h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1.25rem}
+.stat{background:#fff;border-radius:10px;padding:12px 14px;border:0.5px solid #e0e0da}
+.stat-label{font-size:11px;color:#888;margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:600}
+.blue{color:#185FA5}.amber{color:#BA7517}.green{color:#3B6D11}.red{color:#A32D2D}
+.toolbar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.toolbar input,.toolbar select{font-size:13px;height:34px;border:0.5px solid #ccc;border-radius:8px;padding:0 10px;background:#fff;color:#1a1a1a}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:0 14px;height:36px;border:0.5px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}
+.btn:hover{background:#f0f0ee}
+.btn.primary{background:#185FA5;color:#fff;border-color:#185FA5}.btn.primary:hover{background:#0C447C}
+.btn.inv{border-color:#185FA5;color:#185FA5}.btn.inv:hover{background:#e6f1fb}
+.btn.success{background:#3B6D11;color:#fff;border-color:#3B6D11}.btn.success:hover{background:#27500A}
+.btn.wa{background:#25D366;color:#fff;border-color:#25D366}.btn.wa:hover{background:#1ebe5d}
+.btn.danger{background:#fff0f0;color:#A32D2D;border-color:#f7c1c1}
+.btn.sm{height:30px;padding:0 10px;font-size:12px}
+.tbl-wrap{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;overflow:auto;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+th{background:#f8f8f6;padding:10px 10px;text-align:left;font-weight:600;font-size:11px;color:#666;border-bottom:0.5px solid #e0e0da;white-space:nowrap}
+td{padding:10px 10px;border-bottom:0.5px solid #f0f0ee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafaf8}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge.pending{background:#FAEEDA;color:#854F0B}
+.badge.partial{background:#E6F1FB;color:#185FA5}
+.badge.paid{background:#EAF3DE;color:#3B6D11}
+.badge.arrived{background:#EEEDFE;color:#3C3489}
+.swatch{display:inline-block;border-radius:3px;border:0.5px solid #ddd;vertical-align:middle;flex-shrink:0}
+.stock-bar-bg{background:#eee;border-radius:4px;height:6px;display:inline-block;vertical-align:middle}
+.stock-bar-fill{height:6px;border-radius:4px}
+.avail-chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.avail-ok{background:#EAF3DE;color:#3B6D11}.avail-low{background:#FAEEDA;color:#854F0B}.avail-out{background:#FCEBEB;color:#A32D2D}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;align-items:flex-start;justify-content:center;padding:1.5rem;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;border:0.5px solid #ddd;padding:1.5rem;width:100%;max-width:600px;margin-top:1rem}
+.modal h2{font-size:16px;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.tabs{display:flex;border-bottom:0.5px solid #e0e0da;margin-bottom:1rem}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;color:#888;font-family:inherit}
+.tab.active{color:#185FA5;border-bottom-color:#185FA5;font-weight:600}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:0.03em}
+.fg input,.fg select,.fg textarea{font-size:13px;height:36px;border:0.5px solid #ccc;border-radius:8px;padding:0 10px;background:#fff;color:#1a1a1a;font-family:inherit}
+.fg textarea{height:56px;padding:8px 10px;resize:none}
+.fg input.ai{border-color:#3B6D11;background:#f0f9ea}
+.upload-zone{border:1.5px dashed #ccc;border-radius:12px;padding:1.25rem;text-align:center;cursor:pointer;position:relative;margin-bottom:0.75rem;transition:background 0.15s}
+.upload-zone:hover{background:#f8f8f6}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone p{font-size:12px;color:#888;margin-top:6px}
+.ai-bar{border-radius:8px;padding:10px 14px;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:0.75rem}
+.ai-bar.loading{background:#e6f1fb;color:#0C447C}
+.ai-bar.ok{background:#EAF3DE;color:#27500A}
+.ai-bar.err{background:#FCEBEB;color:#791F1F}
+.spinner{width:14px;height:14px;border:2px solid #B5D4F4;border-top-color:#185FA5;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.items-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.items-tbl th{background:#f8f8f6;padding:7px 8px;text-align:left;font-weight:600;font-size:11px;color:#666;border-bottom:0.5px solid #e0e0da}
+.items-tbl td{padding:6px 8px;border-bottom:0.5px solid #f0f0ee;vertical-align:middle}
+.items-tbl tr:last-child td{border-bottom:none}
+.items-tbl input{width:100%;font-size:12px;height:28px;border:0.5px solid #ccc;border-radius:6px;padding:0 6px;background:#fff;color:#1a1a1a;font-family:inherit}
+.items-tbl input[type=color]{padding:1px 3px;height:28px;width:40px;cursor:pointer}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:1.25rem;padding-top:1rem;border-top:0.5px solid #f0f0ee}
+.empty{text-align:center;padding:3rem;color:#888;font-size:14px}
+.sale-row{display:grid;grid-template-columns:20px 1fr auto auto;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0f0ee;font-size:13px}
+.sale-row:last-child{border-bottom:none}
+.sale-qty-input{width:80px;height:34px;font-size:14px;border:0.5px solid #ccc;border-radius:8px;padding:0 8px;background:#fff;color:#1a1a1a;text-align:center;font-family:inherit}
+.sale-qty-input:focus{outline:none;border-color:#185FA5;box-shadow:0 0 0 2px rgba(24,95,165,0.15)}
+.detail-section{background:#f8f8f6;border-radius:10px;padding:12px 14px;margin-bottom:0.75rem}
+.detail-section h3{font-size:11px;font-weight:700;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:13px}
+.kv-label{color:#888;font-size:12px}
+.kv-val{font-weight:600}
+.history-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid #f0f0ee;font-size:12px}
+.history-row:last-child{border-bottom:none}
+.wa-panel{background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:14px;margin-bottom:1rem}
+.wa-panel h3{font-size:13px;font-weight:600;color:#166534;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.wa-panel p{font-size:12px;color:#15803d;margin-bottom:10px}
+.wa-link-box{background:#fff;border:0.5px solid #86efac;border-radius:6px;padding:8px 10px;font-size:11px;font-family:monospace;word-break:break-all;color:#15803d;margin-bottom:8px}
+@media(max-width:600px){
+  .form-grid{grid-template-columns:1fr}
+  .fg.full{grid-column:1}
+  table{font-size:12px}
+  th,td{padding:7px 6px}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<!-- FORM OVERLAY -->
+<div class="overlay" id="formOverlay">
+  <div class="modal" id="formModal"></div>
+</div>
+
+<!-- SELL OVERLAY -->
+<div class="overlay" id="sellOverlay">
+  <div class="modal" id="sellModal" style="max-width:560px"></div>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal" id="detailModal" style="max-width:640px"></div>
+</div>
+
+<!-- HISTORY OVERLAY -->
+<div class="overlay" id="histOverlay">
+  <div class="modal" id="histModal" style="max-width:560px"></div>
+</div>
+
+<script>
+const SK='ct_standalone_v1';
+let containers=[];
+let editId=null;
+let filterStatus='all';
+let searchQ='';
+let aiData=null;
+let aiState=null;
+let activeTab='info';
+let editItems=[];
+let sellContainerId=null;
+let sellQtys={};
+let sellBuyer='';
+let histContainerId=null;
+
+function loadData(){
+  try{const d=localStorage.getItem(SK);if(d)containers=JSON.parse(d);}catch(e){}
+}
+function saveData(){try{localStorage.setItem(SK,JSON.stringify(containers));}catch(e){}}
+
+function sKey(c){
+  if(c.arrivalDate)return'arrived';
+  if(c.fullPayDate)return'paid';
+  if(c.advPayDate)return'partial';
+  return'pending';
+}
+function sBadge(c){
+  const k=sKey(c);
+  const l={arrived:'Arrived',paid:'Fully paid',partial:'Advance paid',pending:'Pending'};
+  return`<span class="badge ${k}">${l[k]}</span>`;
+}
+function fmt(d){return d?d.replace(/-/g,'/'):'—';}
+function money(v){return v?'$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';}
+function availQty(it){return Math.max(0,Number(it.qty||0)-(it.sales||[]).reduce((s,x)=>s+Number(x.qty||0),0));}
+function soldQty(it){return(it.sales||[]).reduce((s,x)=>s+Number(x.qty||0),0);}
+function stockPct(it){const o=Number(it.qty||0);return o?Math.round((availQty(it)/o)*100):0;}
+function stockChip(it){
+  const a=availQty(it),p=stockPct(it);
+  if(a<=0)return`<span class="avail-chip avail-out">Out of stock</span>`;
+  if(p<=20)return`<span class="avail-chip avail-low">${a.toFixed(1)} m² left</span>`;
+  return`<span class="avail-chip avail-ok">${a.toFixed(1)} m² available</span>`;
+}
+function totalM2(c){const t=(c.items||[]).reduce((s,i)=>s+Number(i.qty||0),0);return t>0?t.toFixed(1):null;}
+function availM2(c){const t=(c.items||[]).reduce((s,i)=>s+availQty(i),0);return t>0?t.toFixed(1):null;}
+
+function filtered(){
+  return containers.filter(c=>{
+    const q=searchQ.toLowerCase();
+    const mQ=!q||c.containerNo.toLowerCase().includes(q)||(c.client||'').toLowerCase().includes(q)||(c.origin||'').toLowerCase().includes(q);
+    return mQ&&(filterStatus==='all'||sKey(c)===filterStatus);
+  });
+}
+
+function gStats(){
+  const avail=containers.reduce((s,c)=>(c.items||[]).reduce((ss,i)=>ss+availQty(i),s),0);
+  const sold=containers.reduce((s,c)=>(c.items||[]).reduce((ss,i)=>ss+soldQty(i),s),0);
+  return{total:containers.length,arrived:containers.filter(c=>sKey(c)==='arrived').length,avail:avail.toFixed(1),sold:sold.toFixed(1)};
+}
+
+function renderList(){
+  const s=gStats();const rows=filtered();
+  const app=document.getElementById('app');
+  app.innerHTML=`
+    <div class="topbar">
+      <h1>📦 Container tracker</h1>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn wa" id="waBtn">📲 Share stock via WhatsApp</button>
+        <button class="btn inv" id="invBtn">📄 Read invoice</button>
+        <button class="btn primary" id="addBtn">+ Add manual</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Containers</div><div class="stat-val blue">${s.total}</div></div>
+      <div class="stat"><div class="stat-label">Arrived</div><div class="stat-val green">${s.arrived}</div></div>
+      <div class="stat"><div class="stat-label">Available m²</div><div class="stat-val blue">${s.avail}</div></div>
+      <div class="stat"><div class="stat-label">Sold m²</div><div class="stat-val amber">${s.sold}</div></div>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="srch" placeholder="Search container, client, origin..." value="${searchQ}" style="flex:1;min-width:140px;max-width:260px">
+      <select id="sfilt">
+        <option value="all"${filterStatus==='all'?' selected':''}>All statuses</option>
+        <option value="pending"${filterStatus==='pending'?' selected':''}>Pending</option>
+        <option value="partial"${filterStatus==='partial'?' selected':''}>Advance paid</option>
+        <option value="paid"${filterStatus==='paid'?' selected':''}>Fully paid</option>
+        <option value="arrived"${filterStatus==='arrived'?' selected':''}>Arrived</option>
+      </select>
+      <button class="btn" id="expBtn">⬇ Export CSV</button>
+    </div>
+    <div class="tbl-wrap">
+      ${rows.length===0?`<div class="empty">📦<br><br>${containers.length===0?'No containers yet. Add one or read an invoice.':'No results match your search.'}</div>`:`
+      <table>
+        <thead><tr>
+          <th style="width:115px">Container #</th>
+          <th style="width:85px">Material</th>
+          <th style="width:135px">Client</th>
+          <th style="width:70px">SKUs</th>
+          <th style="width:85px">Total m²</th>
+          <th style="width:90px">Available</th>
+          <th style="width:75px">Sold</th>
+          <th style="width:90px">Status</th>
+          <th style="width:105px">Actions</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(c=>{
+            const m2=totalM2(c);const av=availM2(c);
+            const sold=(c.items||[]).reduce((s,i)=>s+soldQty(i),0).toFixed(1);
+            const cnt=(c.items||[]).length;
+            const allOut=cnt>0&&c.items.every(i=>availQty(i)<=0);
+            return`<tr>
+              <td><strong style="font-family:monospace;font-size:12px">${c.containerNo}</strong></td>
+              <td>${c.material||'—'}</td>
+              <td title="${c.client||''}">${c.client||'—'}</td>
+              <td>${cnt>0?`<strong style="color:#185FA5">${cnt}</strong>`:'—'}</td>
+              <td>${m2?`<strong>${m2} m²</strong>`:'—'}</td>
+              <td>${av?`<strong style="color:${allOut?'#A32D2D':'#3B6D11'}">${av} m²</strong>`:'—'}</td>
+              <td>${Number(sold)>0?`<span style="color:#BA7517">${sold} m²</span>`:'—'}</td>
+              <td>${sBadge(c)}</td>
+              <td>
+                ${cnt>0?`<button class="btn sm success" data-sell="${c.id}">🛒</button> `:''}
+                <button class="btn sm" data-detail="${c.id}">👁</button>
+                <button class="btn sm" data-edit="${c.id}">✏️</button>
+                <button class="btn sm danger" data-del="${c.id}">🗑</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`}
+    </div>`;
+
+  document.getElementById('addBtn').onclick=()=>{editId=null;aiData=null;aiState=null;editItems=[];activeTab='info';openForm();};
+  document.getElementById('invBtn').onclick=()=>{editId=null;aiData=null;aiState=null;editItems=[];activeTab='invoice';openForm();};
+  document.getElementById('waBtn').onclick=shareWhatsApp;
+  document.getElementById('srch').oninput=e=>{searchQ=e.target.value;renderList();};
+  document.getElementById('sfilt').onchange=e=>{filterStatus=e.target.value;renderList();};
+  document.getElementById('expBtn').onclick=exportCSV;
+  document.querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{sellContainerId=b.dataset.sell;sellQtys={};sellBuyer='';openSell();});
+  document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>openDetail(b.dataset.detail));
+  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{
+    const c=containers.find(x=>x.id===b.dataset.id||x.id===b.dataset.edit);
+    editId=b.dataset.edit;
+    editItems=c&&c.items?JSON.parse(JSON.stringify(c.items)):[];
+    aiData=null;aiState=null;activeTab='info';openForm();
+  });
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    if(confirm('Delete this container?')){containers=containers.filter(c=>c.id!==b.dataset.del);saveData();renderList();}
+  });
+}
+
+function shareWhatsApp(){
+  if(!containers.length){alert('No containers to share yet.');return;}
+  const lines=['*📦 Stone Stock — '+new Date().toLocaleDateString('es-CO')+'*',''];
+  const withItems=containers.filter(c=>c.items&&c.items.length);
+  if(!withItems.length){alert('No product stock data yet. Add containers with products first.');return;}
+  withItems.forEach(c=>{
+    const av=availM2(c)||'0';
+    const total=totalM2(c)||'0';
+    lines.push(`*${c.containerNo}* — ${c.material||'Stone'} — ${sBadge(c).replace(/<[^>]+>/g,'')}`)
+    lines.push(`📍 Cliente: ${c.client||'—'}`);
+    lines.push(`📊 Disponible: *${av} m²* de ${total} m²`);
+    c.items.forEach(it=>{
+      const a=availQty(it);
+      const icon=a<=0?'🔴':stockPct(it)<=20?'🟡':'🟢';
+      lines.push(`  ${icon} ${it.colorName||'Product'} ${it.finish||''} ${it.thickness||''} — *${a.toFixed(1)} m²*`);
+    });
+    lines.push('');
+  });
+  lines.push('_Actualizado: '+new Date().toLocaleString('es-CO')+'_');
+  const text=lines.join('\n');
+  const url='https://wa.me/?text='+encodeURIComponent(text);
+  window.open(url,'_blank');
+}
+
+function openForm(){
+  const c=editId?containers.find(x=>x.id===editId):{};
+  const ex=aiData||{};
+  const m=(f)=>ex[f]||c[f]||'';
+  const ai=(f)=>ex[f]?'ai':'';
+  const modal=document.getElementById('formModal');
+  modal.innerHTML=`
+    <h2>${editId?'✏️ Edit container':'➕ Add container'}</h2>
+    <div class="tabs">
+      <button class="tab${activeTab==='invoice'?' active':''}" data-tab="invoice">📄 Invoice upload</button>
+      <button class="tab${activeTab==='info'?' active':''}" data-tab="info">📦 Container info</button>
+      <button class="tab${activeTab==='items'?' active':''}" data-tab="items">🎨 Products & colors</button>
+    </div>
+    ${activeTab==='invoice'?`
+      <div id="aib">${aiBar()}</div>
+      <div class="upload-zone">
+        <div style="font-size:32px">📄</div>
+        <p>Upload shipper invoice (PDF, Word, JPG, PNG)</p>
+        <p style="font-size:11px;color:#aaa;margin-top:3px">AI extracts container #, colors, quantities, prices</p>
+        <input type="file" id="invFile" accept=".pdf,.jpg,.jpeg,.png,.docx,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+      </div>
+      <p style="font-size:12px;color:#888">After uploading, check the other tabs to review extracted data.</p>
+    `:''}
+    ${activeTab==='info'?`
+      <div class="form-grid">
+        <div class="fg full"><label>Container number *</label><input id="f_cn" placeholder="e.g. MSCU1234567" value="${m('containerNo')}" class="${ai('containerNo')}"></div>
+        <div class="fg"><label>Material type</label><select id="f_mat">${['','Marble','Granite','Sinterized stone','Mixed'].map(v=>`<option value="${v}"${m('material')===v?' selected':''}>${v||'Select...'}</option>`).join('')}</select></div>
+        <div class="fg"><label>Origin port (China)</label><input id="f_ori" placeholder="e.g. Shanghai" value="${m('origin')}" class="${ai('origin')}"></div>
+        <div class="fg full"><label>Client in Colombia *</label><input id="f_cli" placeholder="Client name" value="${m('client')}" class="${ai('client')}"></div>
+        <div class="fg"><label>Advance payment date</label><input type="date" id="f_apd" value="${m('advPayDate')}" class="${ai('advPayDate')}"></div>
+        <div class="fg"><label>Advance amount (USD)</label><input type="number" id="f_apa" placeholder="0.00" value="${m('advAmount')}" class="${ai('advAmount')}"></div>
+        <div class="fg"><label>Full payment date</label><input type="date" id="f_fpd" value="${m('fullPayDate')}"></div>
+        <div class="fg"><label>Total invoice (USD)</label><input type="number" id="f_tot" placeholder="0.00" value="${m('totalAmount')}" class="${ai('totalAmount')}"></div>
+        <div class="fg"><label>Estimated departure</label><input type="date" id="f_dep" value="${m('departDate')}" class="${ai('departDate')}"></div>
+        <div class="fg"><label>Arrival date (Colombia)</label><input type="date" id="f_arr" value="${m('arrivalDate')}"></div>
+        <div class="fg full"><label>Notes</label><textarea id="f_nts" placeholder="Invoice #, reference...">${m('notes')}</textarea></div>
+      </div>
+    `:''}
+    ${activeTab==='items'?`<div id="itemsSection">${itemsTable()}</div>`:''}
+    <div class="modal-footer">
+      <button class="btn" id="cancelBtn">Cancel</button>
+      <button class="btn primary" id="saveBtn">✓ ${editId?'Save changes':'Add container'}</button>
+    </div>`;
+  document.getElementById('formOverlay').classList.add('open');
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{activeTab=t.dataset.tab;openForm();});
+  document.getElementById('cancelBtn').onclick=closeForm;
+  document.getElementById('saveBtn').onclick=saveRec;
+  if(activeTab==='invoice'&&document.getElementById('invFile'))document.getElementById('invFile').onchange=handleInvoice;
+  if(activeTab==='items')bindItems();
+}
+
+function closeForm(){document.getElementById('formOverlay').classList.remove('open');}
+
+function aiBar(){
+  if(!aiState)return'';
+  if(aiState==='loading')return`<div class="ai-bar loading"><div class="spinner"></div> Reading invoice with AI...</div>`;
+  if(aiState==='ok')return`<div class="ai-bar ok">✓ Invoice read — green fields auto-filled. Review and save.</div>`;
+  if(aiState==='err')return`<div class="ai-bar err">⚠ Could not read invoice. Fill manually or try another file.</div>`;
+  return'';
+}
+
+function itemsTable(){
+  const rows=editItems.map((it,i)=>`<tr>
+    <td><input type="color" value="${it.color||'#cccccc'}" data-f="color" data-i="${i}" style="width:38px;padding:1px 3px"></td>
+    <td><input type="text" value="${it.colorName||''}" placeholder="Color name" data-f="colorName" data-i="${i}" style="min-width:90px"></td>
+    <td><input type="text" value="${it.finish||''}" placeholder="Polished" data-f="finish" data-i="${i}" style="min-width:65px"></td>
+    <td><input type="text" value="${it.thickness||''}" placeholder="2cm" data-f="thickness" data-i="${i}" style="min-width:48px"></td>
+    <td><input type="number" value="${it.qty||''}" placeholder="m²" data-f="qty" data-i="${i}" style="min-width:55px"></td>
+    <td><input type="number" value="${it.unitPrice||''}" placeholder="$/m²" data-f="unitPrice" data-i="${i}" style="min-width:60px"></td>
+    <td style="text-align:right;font-weight:600;font-size:12px">${it.qty&&it.unitPrice?'$'+(Number(it.qty)*Number(it.unitPrice)).toFixed(2):'—'}</td>
+    <td><button class="btn sm danger" data-di="${i}">🗑</button></td>
+  </tr>`).join('');
+  const total=editItems.reduce((s,it)=>s+(Number(it.qty||0)*Number(it.unitPrice||0)),0);
+  return`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <strong style="font-size:13px">Product line items</strong>
+      <button class="btn sm primary" id="addItemBtn">+ Add row</button>
+    </div>
+    <div style="overflow:auto">
+    <table class="items-tbl">
+      <thead><tr><th style="width:44px">Color</th><th>Color name</th><th>Finish</th><th>Thick.</th><th>Qty m²</th><th>$/m²</th><th style="text-align:right">Subtotal</th><th style="width:36px"></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    ${total>0?`<div style="text-align:right;font-size:13px;font-weight:700;margin-top:8px;color:#185FA5">Total: $${total.toFixed(2)}</div>`:''}`;
+}
+
+function bindItems(){
+  const aib=document.getElementById('addItemBtn');
+  if(aib)aib.onclick=()=>{editItems.push({color:'#cccccc',colorName:'',finish:'',thickness:'',qty:'',unitPrice:'',sales:[]});const s=document.getElementById('itemsSection');if(s){s.innerHTML=itemsTable();bindItems();}};
+  document.querySelectorAll('[data-di]').forEach(b=>b.onclick=()=>{editItems.splice(Number(b.dataset.di),1);const s=document.getElementById('itemsSection');if(s){s.innerHTML=itemsTable();bindItems();}});
+  document.querySelectorAll('[data-f]').forEach(inp=>inp.oninput=e=>{
+    const i=Number(e.target.dataset.i);editItems[i][e.target.dataset.f]=e.target.value;
+    if(['qty','unitPrice'].includes(e.target.dataset.f)){const s=document.getElementById('itemsSection');if(s){s.innerHTML=itemsTable();bindItems();}}
+  });
+}
+
+function gv(id){const e=document.getElementById(id);return e?e.value:'';}
+
+function saveRec(){
+  const containerNo=gv('f_cn').trim().toUpperCase();
+  const client=gv('f_cli').trim();
+  if(!containerNo||!client){alert('Container number and client are required.');return;}
+  const existing=editId?containers.find(x=>x.id===editId):{};
+  const merged=editItems.map((it,i)=>{
+    const orig=existing.items&&existing.items[i];
+    return{...it,sales:(orig&&orig.sales)?orig.sales:(it.sales||[])};
+  });
+  const rec={id:editId||Date.now().toString(),containerNo,client,material:gv('f_mat'),origin:gv('f_ori').trim(),advPayDate:gv('f_apd'),advAmount:gv('f_apa'),fullPayDate:gv('f_fpd'),totalAmount:gv('f_tot'),departDate:gv('f_dep'),arrivalDate:gv('f_arr'),notes:gv('f_nts').trim(),items:merged};
+  if(editId)containers=containers.map(c=>c.id===editId?rec:c);else containers.push(rec);
+  saveData();closeForm();renderList();
+}
+
+async function handleInvoice(e){
+  const file=e.target.files[0];if(!file)return;
+  aiState='loading';aiData=null;
+  document.getElementById('aib').innerHTML=aiBar();
+  try{
+    const _key=window._apiKey||localStorage.getItem('ct_apikey')||'';
+    if(!_key){
+      const k=prompt('Enter your Anthropic API key to use invoice reading (get it free at console.anthropic.com):','');
+      if(!k){aiState='err';activeTab='invoice';openForm();return;}
+      window._apiKey=k;try{localStorage.setItem('ct_apikey',k);}catch(e){}
+    }
+    const ANTHROPIC_API_KEY=window._apiKey||localStorage.getItem('ct_apikey')||'';
+    const isDocx=file.name.toLowerCase().endsWith('.docx');
+    const isPDF=file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf');
+    let messages;
+    if(isDocx){
+      // Extract text from docx using mammoth via CDN
+      const arrayBuffer=await file.arrayBuffer();
+      let docText='';
+      try{
+        if(!window.mammoth){
+          await new Promise((res,rej)=>{
+            const s=document.createElement('script');
+            s.src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+            s.onload=res;s.onerror=rej;document.head.appendChild(s);
+          });
+        }
+        const result=await window.mammoth.extractRawText({arrayBuffer});
+        docText=result.value;
+      }catch(err){throw new Error('Could not read Word file');}
+      messages=[{role:'user',content:[{type:'text',text:'Here is the text content of a shipping invoice (extracted from a Word document):\n\n'+docText+'\n\nParse this invoice. Return ONLY valid JSON, no markdown, no backticks.\n\nTop-level: containerNo, material (Marble|Granite|Sinterized stone|Mixed|null), origin, client, totalAmount (number), departDate (YYYY-MM-DD), advPayDate (YYYY-MM-DD), advAmount (number), notes (under 80 chars).\n\nitems array per product: colorName, color (hex for that stone type), finish, thickness, qty (number m²), unitPrice (number per m²).\n\nReturn ONLY the JSON.'}]}];
+    } else {
+      const b64=await toB64(file);
+      const mt=isPDF?'application/pdf':(file.type||'image/jpeg');
+      const block=isPDF?{type:'document',source:{type:'base64',media_type:mt,data:b64}}:{type:'image',source:{type:'base64',media_type:mt,data:b64}};
+      messages=[{role:'user',content:[block,{type:'text',text:'Parse this shipping invoice. Return ONLY valid JSON, no markdown, no backticks.\n\nTop-level: containerNo, material (Marble|Granite|Sinterized stone|Mixed|null), origin, client, totalAmount (number), departDate (YYYY-MM-DD), advPayDate (YYYY-MM-DD), advAmount (number), notes (under 80 chars).\n\nitems array per product: colorName, color (hex for that stone type), finish, thickness, qty (number m²), unitPrice (number per m²).\n\nReturn ONLY the JSON.'}]}];
+    }
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages})});
+    const data=await resp.json();
+    if(data.error)throw new Error(data.error.message);
+    const txt=data.content.map(b=>b.text||'').join('').trim().replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(txt);
+    aiData=parsed;
+    if(parsed.items&&parsed.items.length)editItems=parsed.items.map(it=>({color:it.color||'#cccccc',colorName:it.colorName||'',finish:it.finish||'',thickness:it.thickness||'',qty:it.qty||'',unitPrice:it.unitPrice||'',sales:[]}));
+    aiState='ok';
+  }catch(err){console.error(err);aiState='err';}
+  activeTab='invoice';openForm();
+}
+
+function toB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(new Error('Read failed'));r.readAsDataURL(file);});}
+
+function openSell(){
+  const c=containers.find(x=>x.id===sellContainerId);
+  if(!c||!c.items||!c.items.length)return;
+  const today=new Date().toISOString().slice(0,10);
+  const modal=document.getElementById('sellModal');
+  modal.innerHTML=`
+    <h2>🛒 Record sale — <span style="font-family:monospace">${c.containerNo}</span></h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
+      <div class="fg"><label>Buyer / client name</label><input id="sb" placeholder="Who is buying?" value="${sellBuyer}"></div>
+      <div class="fg"><label>Sale date</label><input type="date" id="sd" value="${today}"></div>
+      <div class="fg full"><label>Notes (optional)</label><input id="sn" placeholder="Invoice #, order reference..."></div>
+    </div>
+    <p style="font-size:12px;font-weight:600;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.03em">Enter m² sold per product</p>
+    <div id="sellRows">
+      ${c.items.map((it,i)=>{
+        const avail=availQty(it);const pct=stockPct(it);
+        const bc=pct>50?'#3B6D11':pct>20?'#BA7517':'#A32D2D';
+        return`<div class="sale-row">
+          <span class="swatch" style="background:${it.color||'#ccc'};width:18px;height:18px;border-radius:3px"></span>
+          <div>
+            <div style="font-weight:600">${it.colorName||'Product '+(i+1)}</div>
+            <div style="font-size:11px;color:#888">${[it.finish,it.thickness].filter(Boolean).join(' · ')}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              ${stockChip(it)}
+              <div class="stock-bar-bg" style="width:70px"><div class="stock-bar-fill" style="width:${pct}%;background:${bc}"></div></div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:11px;color:#888">
+            <div>${Number(it.qty||0).toFixed(1)} m² original</div>
+            <div>${soldQty(it).toFixed(1)} m² sold</div>
+          </div>
+          <div>
+            <input type="number" class="sale-qty-input" id="sq_${i}" placeholder="0" min="0" max="${avail}" step="0.1" value="${sellQtys[i]||''}" ${avail<=0?'disabled style="opacity:0.4"':''}>
+            <div style="font-size:10px;color:#aaa;text-align:center;margin-top:2px">m² to sell</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div id="sellTotal" style="text-align:right;margin-top:10px;font-size:14px;font-weight:700;color:#185FA5"></div>
+    <div class="modal-footer">
+      <button class="btn" id="cancelSell">Cancel</button>
+      <button class="btn success" id="confirmSell">✓ Confirm sale</button>
+    </div>`;
+  document.getElementById('sellOverlay').classList.add('open');
+  document.getElementById('cancelSell').onclick=()=>document.getElementById('sellOverlay').classList.remove('open');
+  document.getElementById('sb').oninput=e=>{sellBuyer=e.target.value;};
+  c.items.forEach((_,i)=>{
+    const inp=document.getElementById('sq_'+i);
+    if(!inp)return;
+    inp.oninput=e=>{
+      sellQtys[i]=e.target.value;
+      const t=Object.values(sellQtys).reduce((s,v)=>s+Number(v||0),0);
+      const el=document.getElementById('sellTotal');
+      if(el)el.textContent=t>0?'Total selling: '+t.toFixed(1)+' m²':'';
+    };
+  });
+  document.getElementById('confirmSell').onclick=()=>{
+    const buyer=document.getElementById('sb').value.trim();
+    const date=document.getElementById('sd').value||today;
+    const note=document.getElementById('sn').value.trim();
+    let any=false;let errs=[];
+    c.items.forEach((it,i)=>{
+      const qty=Number(sellQtys[i]||0);if(qty<=0)return;
+      const av=availQty(it);
+      if(qty>av){errs.push(`"${it.colorName}" — only ${av.toFixed(1)} m² available`);return;}
+      if(!it.sales)it.sales=[];
+      it.sales.push({id:Date.now().toString()+i,qty,buyer,date,note});
+      any=true;
+    });
+    if(errs.length){alert('Stock error:\n'+errs.join('\n'));return;}
+    if(!any){alert('Enter at least one quantity.');return;}
+    saveData();
+    document.getElementById('sellOverlay').classList.remove('open');
+    sellQtys={};renderList();
+    alert('✓ Sale recorded! Stock updated.');
+  };
+}
+
+function openDetail(id){
+  const c=containers.find(x=>x.id===id);if(!c)return;
+  const m2=totalM2(c);const av=availM2(c);
+  const iTotal=(c.items||[]).reduce((s,i)=>s+(Number(i.qty||0)*Number(i.unitPrice||0)),0);
+  const modal=document.getElementById('detailModal');
+  modal.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+      <h2 style="font-family:monospace;font-size:17px;margin:0">${c.containerNo}</h2>
+      ${sBadge(c)}
+      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
+        ${c.items&&c.items.length?`<button class="btn sm success" id="dsell">🛒 Record sale</button>`:''}
+        ${c.items&&c.items.length?`<button class="btn sm inv" id="dhist">📋 Sales history</button>`:''}
+        <button class="btn sm" id="dedit">✏️ Edit</button>
+        <button class="btn sm" id="dclose">✕ Close</button>
+      </div>
+    </div>
+    <div class="detail-section"><h3>Shipment info</h3>
+      <div class="kv">
+        <span class="kv-label">Material</span><span class="kv-val">${c.material||'—'}</span>
+        <span class="kv-label">Origin port</span><span class="kv-val">${c.origin||'—'}</span>
+        <span class="kv-label">Client (Colombia)</span><span class="kv-val">${c.client||'—'}</span>
+        <span class="kv-label">Departure</span><span class="kv-val">${fmt(c.departDate)}</span>
+        <span class="kv-label">Arrival</span><span class="kv-val">${fmt(c.arrivalDate)}</span>
+        <span class="kv-label">Notes</span><span class="kv-val">${c.notes||'—'}</span>
+      </div>
+    </div>
+    <div class="detail-section"><h3>Payments</h3>
+      <div class="kv">
+        <span class="kv-label">Advance paid on</span><span class="kv-val">${fmt(c.advPayDate)}</span>
+        <span class="kv-label">Advance amount</span><span class="kv-val">${money(c.advAmount)}</span>
+        <span class="kv-label">Full payment on</span><span class="kv-val">${fmt(c.fullPayDate)}</span>
+        <span class="kv-label">Total invoice</span><span class="kv-val">${money(c.totalAmount)}</span>
+        ${c.totalAmount&&c.advAmount?`<span class="kv-label">Balance due</span><span class="kv-val" style="color:#BA7517">${money(Number(c.totalAmount)-Number(c.advAmount))}</span>`:''}
+      </div>
+    </div>
+    ${c.items&&c.items.length?`
+    <div class="detail-section"><h3>Stock — ${av||'0'} m² available of ${m2||'0'} m²</h3>
+      <div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:left;width:36px">Color</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:left">Product</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:right">Original</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:right">Sold</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:right">Available</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;width:100px">Stock</th>
+        </tr></thead>
+        <tbody>
+          ${(c.items||[]).map(it=>{
+            const a=availQty(it);const p=stockPct(it);const bc=p>50?'#3B6D11':p>20?'#BA7517':'#A32D2D';
+            return`<tr>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee"><span class="swatch" style="background:${it.color||'#ccc'};width:18px;height:18px;border-radius:3px;display:inline-block"></span></td>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee"><strong>${it.colorName||'—'}</strong><div style="font-size:11px;color:#888">${[it.finish,it.thickness].filter(Boolean).join(' · ')}</div></td>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee;text-align:right">${Number(it.qty||0).toFixed(1)} m²</td>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee;text-align:right;color:#BA7517">${soldQty(it).toFixed(1)} m²</td>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee;text-align:right;font-weight:700;color:${a<=0?'#A32D2D':p<=20?'#BA7517':'#3B6D11'}">${a.toFixed(1)} m²</td>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee"><div style="display:flex;align-items:center;gap:5px"><div class="stock-bar-bg" style="flex:1"><div class="stock-bar-fill" style="width:${p}%;background:${bc}"></div></div><span style="font-size:11px;color:#888;min-width:28px">${p}%</span></div></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+    </div>`:''}`;
+  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('dclose').onclick=()=>document.getElementById('detailOverlay').classList.remove('open');
+  const dsell=document.getElementById('dsell');
+  if(dsell)dsell.onclick=()=>{document.getElementById('detailOverlay').classList.remove('open');sellContainerId=id;sellQtys={};sellBuyer='';openSell();};
+  const dhist=document.getElementById('dhist');
+  if(dhist)dhist.onclick=()=>{document.getElementById('detailOverlay').classList.remove('open');histContainerId=id;openHistory();};
+  document.getElementById('dedit').onclick=()=>{
+    document.getElementById('detailOverlay').classList.remove('open');
+    const cc=containers.find(x=>x.id===id);
+    editId=id;editItems=cc&&cc.items?JSON.parse(JSON.stringify(cc.items)):[];
+    aiData=null;aiState=null;activeTab='info';openForm();
+  };
+}
+
+function openHistory(){
+  const c=containers.find(x=>x.id===histContainerId);if(!c)return;
+  const all=[];
+  (c.items||[]).forEach(it=>(it.sales||[]).forEach(s=>all.push({...s,colorName:it.colorName,color:it.color})));
+  all.sort((a,b)=>b.date.localeCompare(a.date));
+  const modal=document.getElementById('histModal');
+  modal.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+      <h2 style="margin:0">📋 Sales history — <span style="font-family:monospace">${c.containerNo}</span></h2>
+      <button class="btn sm" id="hclose" style="margin-left:auto">✕ Close</button>
+    </div>
+    ${all.length===0?`<div class="empty">No sales recorded yet.</div>`:`
+    <div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Color</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Product</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Date</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Qty sold</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Buyer</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Note</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;width:40px"></th>
+      </tr></thead>
+      <tbody>
+        ${all.map(s=>`<tr>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee"><span class="swatch" style="background:${s.color||'#ccc'};width:16px;height:16px;border-radius:3px;display:inline-block"></span></td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee">${s.colorName||'—'}</td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee;font-size:12px">${fmt(s.date)}</td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee"><strong>${Number(s.qty).toFixed(1)} m²</strong></td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee">${s.buyer||'—'}</td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee;font-size:12px;color:#888">${s.note||'—'}</td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee"><button class="btn sm danger" data-ds="${s.id}">🗑</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`}`;
+  document.getElementById('histOverlay').classList.add('open');
+  document.getElementById('hclose').onclick=()=>document.getElementById('histOverlay').classList.remove('open');
+  document.querySelectorAll('[data-ds]').forEach(b=>b.onclick=()=>{
+    if(!confirm('Undo this sale? Stock will be restored.'))return;
+    const cc=containers.find(x=>x.id===histContainerId);
+    (cc.items||[]).forEach(it=>{it.sales=(it.sales||[]).filter(s=>s.id!==b.dataset.ds);});
+    saveData();openHistory();
+  });
+}
+
+function exportCSV(){
+  const rows=[];
+  containers.forEach(c=>{
+    if(!c.items||!c.items.length){
+      rows.push([c.containerNo,c.material||'',c.client||'',c.origin||'','','','','','',sKey(c)].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+    }else{
+      c.items.forEach(it=>rows.push([c.containerNo,c.material||'',c.client||'',c.origin||'',it.colorName||'',it.finish||'',it.thickness||'',Number(it.qty||0).toFixed(1),availQty(it).toFixed(1),sKey(c)].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')));
+    }
+  });
+  const h='"Container #","Material","Client","Origin","Color","Finish","Thickness","Total m²","Available m²","Status"';
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h,...rows].join('\n'));
+  a.download='stock_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+// API KEY SETUP
+function showApiSetup(){
+  const app=document.getElementById('app');
+  app.innerHTML=`
+    <div style="max-width:480px;margin:3rem auto;background:#fff;border-radius:14px;border:0.5px solid #e0e0da;padding:2rem">
+      <h1 style="font-size:20px;margin-bottom:0.5rem">📦 Container Tracker</h1>
+      <p style="color:#888;font-size:13px;margin-bottom:1.5rem">Stone import management — China to Colombia</p>
+      <div class="fg" style="margin-bottom:1rem">
+        <label>Anthropic API Key (for invoice AI reading)</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="font-family:monospace">
+        <span style="font-size:11px;color:#aaa;margin-top:4px">Get yours at console.anthropic.com — stored locally only, never sent anywhere except Anthropic.</span>
+      </div>
+      <button class="btn primary" id="startBtn" style="width:100%;justify-content:center;font-size:14px">Start tracking →</button>
+      <p style="font-size:11px;color:#aaa;margin-top:1rem;text-align:center">You can skip this and add containers manually — AI invoice reading will be disabled.</p>
+      <button class="btn" id="skipBtn" style="width:100%;justify-content:center;margin-top:8px;font-size:13px">Skip — use without AI</button>
+    </div>`;
+  document.getElementById('startBtn').onclick=()=>{
+    const k=document.getElementById('apiKeyInput').value.trim();
+    if(!k){alert('Please enter your API key.');return;}
+    window._apiKey=k;
+    try{localStorage.setItem('ct_apikey',k);}catch(e){}
+    loadData();renderList();
+  };
+  document.getElementById('skipBtn').onclick=()=>{window._apiKey='';loadData();renderList();};
+}
+
+// INIT
+loadData();renderList();
+</script>
+</body>
+</html>
