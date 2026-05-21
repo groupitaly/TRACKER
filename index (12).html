@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Stone Tracker">
+<title>Stone Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a;background:#f5f5f3;min-height:100vh;padding-bottom:80px}
+.wrap{max-width:960px;margin:0 auto;padding:1rem}
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px}
+.topbar h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.topbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* BOTTOM NAV (mobile) */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:0.5px solid #e0e0da;z-index:200;padding:8px 0 12px}
+.bottom-nav-inner{display:flex;justify-content:space-around}
+.bnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 16px;border:none;background:none;font-size:10px;color:#888;cursor:pointer;font-family:inherit;border-radius:8px}
+.bnav-btn.active{color:#185FA5}
+.bnav-icon{font-size:22px;line-height:1}
+/* DESKTOP TABS */
+.nav-tabs{display:flex;gap:0;border-bottom:2px solid #e0e0da;margin-bottom:1.25rem;overflow-x:auto}
+.nav-tab{padding:10px 20px;font-size:14px;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;color:#888;font-family:inherit;font-weight:500;margin-bottom:-2px;white-space:nowrap}
+.nav-tab.active{color:#185FA5;border-bottom-color:#185FA5}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:1.25rem}
+.stat{background:#fff;border-radius:12px;padding:12px 14px;border:0.5px solid #e0e0da}
+.stat-label{font-size:11px;color:#888;margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:700}
+.blue{color:#185FA5}.amber{color:#BA7517}.green{color:#3B6D11}.red{color:#A32D2D}
+/* ALERTS */
+.alert-banner{background:#FCEBEB;border:0.5px solid #f7c1c1;border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#791F1F;display:flex;align-items:center;gap:8px}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:0 14px;height:40px;border:0.5px solid #ccc;border-radius:10px;background:#fff;color:#1a1a1a;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all 0.15s;min-height:40px}
+.btn:hover{background:#f0f0ee}
+.btn:active{transform:scale(0.97)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn.primary{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn.primary:hover{background:#0C447C}
+.btn.inv{border-color:#185FA5;color:#185FA5}
+.btn.inv:hover{background:#e6f1fb}
+.btn.success{background:#3B6D11;color:#fff;border-color:#3B6D11}
+.btn.success:hover{background:#27500A}
+.btn.wa{background:#25D366;color:#fff;border-color:#1ebe5d}
+.btn.danger{background:#fff0f0;color:#A32D2D;border-color:#f7c1c1}
+.btn.sm{height:32px;padding:0 10px;font-size:12px;min-height:32px}
+.btn.icon{padding:0;width:36px;height:36px;justify-content:center;font-size:16px}
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.toolbar input,.toolbar select{font-size:14px;height:40px;border:0.5px solid #ccc;border-radius:10px;padding:0 12px;background:#fff;color:#1a1a1a;font-family:inherit}
+/* CONTAINER CARDS (mobile) */
+.container-cards{display:none;flex-direction:column;gap:10px}
+.container-card{background:#fff;border:0.5px solid #e0e0da;border-radius:14px;padding:14px;cursor:pointer;transition:box-shadow 0.15s;-webkit-tap-highlight-color:transparent}
+.container-card:active{background:#f8f8f6}
+.cc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cc-no{font-family:monospace;font-size:14px;font-weight:700}
+.cc-meta{font-size:12px;color:#888;margin-bottom:8px}
+.cc-stock{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.cc-stock-item{background:#f8f8f6;border-radius:8px;padding:6px 10px}
+.cc-stock-label{font-size:10px;color:#888;text-transform:uppercase;font-weight:600}
+.cc-stock-val{font-size:16px;font-weight:700}
+.cc-actions{display:flex;gap:8px}
+.cc-products{font-size:11px;color:#888;margin-top:6px;line-height:1.6}
+.stock-bar-bg{background:#eee;border-radius:4px;height:6px;display:block;margin-top:4px}
+.stock-bar-fill{height:6px;border-radius:4px}
+/* DESKTOP TABLE */
+.tbl-wrap{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;overflow:auto;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+th{background:#f8f8f6;padding:10px;text-align:left;font-weight:600;font-size:11px;color:#666;border-bottom:0.5px solid #e0e0da;white-space:nowrap}
+td{padding:10px;border-bottom:0.5px solid #f0f0ee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafaf8}
+/* BADGES */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge.pending{background:#FAEEDA;color:#854F0B}
+.badge.partial{background:#E6F1FB;color:#185FA5}
+.badge.paid{background:#EAF3DE;color:#3B6D11}
+.badge.arrived{background:#EEEDFE;color:#3C3489}
+.avail-chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.avail-ok{background:#EAF3DE;color:#3B6D11}
+.avail-low{background:#FAEEDA;color:#854F0B}
+.avail-out{background:#FCEBEB;color:#A32D2D}
+.swatch{display:inline-block;border-radius:3px;border:0.5px solid #ddd;vertical-align:middle;flex-shrink:0}
+/* OVERLAYS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;align-items:flex-start;justify-content:center;padding:1rem;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;border:0.5px solid #ddd;padding:1.5rem;width:100%;max-width:600px;margin-top:1rem}
+.modal h2{font-size:16px;font-weight:700;margin-bottom:1rem}
+/* FORM */
+.tabs{display:flex;border-bottom:0.5px solid #e0e0da;margin-bottom:1rem;overflow-x:auto}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;color:#888;font-family:inherit;white-space:nowrap}
+.tab.active{color:#185FA5;border-bottom-color:#185FA5;font-weight:600}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:11px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:0.03em}
+.fg input,.fg select,.fg textarea{font-size:14px;height:42px;border:0.5px solid #ccc;border-radius:10px;padding:0 12px;background:#fff;color:#1a1a1a;font-family:inherit}
+.fg textarea{height:60px;padding:10px 12px;resize:none}
+.fg input.ai{border-color:#3B6D11;background:#f0f9ea}
+/* UPLOAD ZONE */
+.upload-zone{border:1.5px dashed #ccc;border-radius:12px;padding:1.25rem;text-align:center;cursor:pointer;position:relative;margin-bottom:0.75rem}
+.upload-zone:hover{background:#f8f8f6}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone p{font-size:12px;color:#888;margin-top:6px}
+/* AI BAR */
+.ai-bar{border-radius:8px;padding:10px 14px;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:0.75rem}
+.ai-bar.loading{background:#e6f1fb;color:#0C447C}
+.ai-bar.ok{background:#EAF3DE;color:#27500A}
+.ai-bar.err{background:#FCEBEB;color:#791F1F}
+.spinner{width:14px;height:14px;border:2px solid #B5D4F4;border-top-color:#185FA5;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+.spinner-lg{width:32px;height:32px;border:3px solid #e0e0da;border-top-color:#185FA5;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ITEMS TABLE */
+.items-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.items-tbl th{background:#f8f8f6;padding:7px 8px;text-align:left;font-weight:700;font-size:11px;color:#666;border-bottom:0.5px solid #e0e0da}
+.items-tbl td{padding:6px 8px;border-bottom:0.5px solid #f0f0ee;vertical-align:middle}
+.items-tbl tr:last-child td{border-bottom:none}
+.items-tbl input{width:100%;font-size:12px;height:30px;border:0.5px solid #ccc;border-radius:6px;padding:0 6px;background:#fff;color:#1a1a1a;font-family:inherit}
+.items-tbl input[type=color]{padding:1px 3px;height:30px;width:40px;cursor:pointer}
+/* MODAL FOOTER */
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:1.25rem;padding-top:1rem;border-top:0.5px solid #f0f0ee}
+/* EMPTY */
+.empty{text-align:center;padding:3rem;color:#888;font-size:14px}
+/* DETAIL */
+.detail-section{background:#f8f8f6;border-radius:12px;padding:12px 14px;margin-bottom:0.75rem}
+.detail-section h3{font-size:11px;font-weight:700;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:13px}
+.kv-label{color:#888;font-size:12px}
+.kv-val{font-weight:600}
+/* SELL */
+.sale-row{display:grid;grid-template-columns:20px 1fr auto auto;align-items:center;gap:10px;padding:12px 0;border-bottom:0.5px solid #f0f0ee;font-size:13px}
+.sale-row:last-child{border-bottom:none}
+.sale-qty-input{width:80px;height:40px;font-size:15px;border:0.5px solid #ccc;border-radius:10px;padding:0 8px;background:#fff;color:#1a1a1a;text-align:center;font-family:inherit}
+.sale-qty-input:focus{outline:none;border-color:#185FA5;box-shadow:0 0 0 3px rgba(24,95,165,0.15)}
+/* ORDERS */
+.order-card{background:#fff;border:0.5px solid #e0e0da;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:box-shadow 0.15s}
+.order-card:active{background:#f8f8f6}
+.order-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.order-client{font-weight:700;font-size:16px}
+.order-status{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.os-pending{background:#FAEEDA;color:#854F0B}
+.os-partial{background:#E6F1FB;color:#185FA5}
+.os-paid{background:#EAF3DE;color:#3B6D11}
+.order-meta{font-size:12px;color:#888;display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.order-amounts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:8px}
+.amount-box{background:#f8f8f6;border-radius:8px;padding:8px 12px}
+.amount-box label{font-size:10px;color:#888;font-weight:700;text-transform:uppercase;display:block;margin-bottom:2px}
+.amount-box strong{font-size:15px}
+.pay-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #f0f0ee;font-size:13px}
+.pay-row:last-child{border-bottom:none}
+/* DASHBOARD */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:1rem}
+.dash-card{background:#fff;border:0.5px solid #e0e0da;border-radius:14px;padding:16px}
+.dash-card h3{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.dash-big{font-size:32px;font-weight:700;margin-bottom:4px}
+.dash-sub{font-size:12px;color:#888}
+.progress-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.progress-bar-bg{background:#f0f0ee;border-radius:4px;height:8px;flex:1;margin:0 8px}
+.progress-bar-fill{height:8px;border-radius:4px;background:#185FA5}
+/* SELLER CHIP */
+.seller-chip{display:flex;align-items:center;gap:6px;background:#fff;border:0.5px solid #e0e0da;border-radius:20px;padding:6px 12px;font-size:13px;cursor:pointer;min-height:40px}
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+/* RT DOT */
+.rt-dot{width:8px;height:8px;background:#3B6D11;border-radius:50%;display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+/* LOGIN */
+.login-wrap{max-width:360px;margin:4rem auto;background:#fff;border-radius:16px;border:0.5px solid #e0e0da;padding:2rem;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+/* WHATSAPP CLIENT BTN */
+/* MOBILE NAVIGATION */
+@media(max-width:640px){
+  #backODetail, #backOrderBtn, #backOrderBtn2{height:44px;font-size:15px;width:100%;justify-content:center;margin-bottom:8px}
+  .modal-close-btn{
+    position:fixed !important;
+    top:12px !important;
+    right:12px !important;
+    z-index:9999 !important;
+    width:44px !important;
+    height:44px !important;
+    border-radius:50% !important;
+    background:#fff !important;
+    border:0.5px solid #ccc !important;
+    font-size:20px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    box-shadow:0 2px 12px rgba(0,0,0,0.2) !important;
+    cursor:pointer !important;
+  }
+  .modal h2{padding-right:50px}
+}
+.wa-client-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#25D366;color:#fff;border:none;border-radius:20px;font-size:11px;cursor:pointer;font-family:inherit}
+/* MOBILE RESPONSIVE */
+@media(max-width:640px){
+  body{padding-bottom:90px}
+  .bottom-nav{display:block}
+  .nav-tabs{display:none}
+  .tbl-wrap{display:none}
+  .container-cards{display:flex}
+  .form-grid{grid-template-columns:1fr}
+  .fg.full{grid-column:1}
+  .topbar-actions .btn span{display:none}
+  .wrap{padding:0.75rem}
+  .modal{margin-top:0;border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;max-height:90vh;overflow-y:auto}
+  .overlay{align-items:flex-end;padding:0}
+  .stats{grid-template-columns:1fr 1fr}
+  .order-amounts{grid-template-columns:1fr 1fr}
+  .dash-grid{grid-template-columns:1fr}
+}
+@media(min-width:641px){
+  .bottom-nav{display:none}
+  .container-cards{display:none!important}
+  .tbl-wrap{display:block}
+}
+
+
+/* PROSPECTS */
+.prospect-card{background:#fff;border:0.5px solid #e0e0da;border-radius:14px;padding:14px;margin-bottom:10px;transition:box-shadow 0.15s}
+.prospect-card:active{background:#f8f8f6}
+.ps-new{background:#E6F1FB;color:#185FA5}
+.ps-visited{background:#FFF8E1;color:#7B5800}
+.ps-interested{background:#EAF3DE;color:#3B6D11}
+.ps-client{background:#EEEDFE;color:#3C3489}
+.ps-notinterested{background:#f0f0ee;color:#888}
+.visit-row{padding:8px 0;border-bottom:0.5px solid #f0f0ee;font-size:13px}
+.visit-row:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+<div class="overlay" id="formOverlay"><div class="modal" id="formModal"></div></div>
+<div class="overlay" id="sellOverlay"><div class="modal" id="sellModal" style="max-width:540px"></div></div>
+<div class="overlay" id="detailOverlay"><div class="modal" id="detailModal" style="max-width:640px"></div></div>
+<div class="overlay" id="histOverlay"><div class="modal" id="histModal" style="max-width:560px"></div></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://phmkcxkgruhxrprotvat.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBobWtjeGtncnVoeHJwcm90dmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNDk3MTcsImV4cCI6MjA5NDgyNTcxN30.J8BGamimXhWccj_p6f5QxvsQ3RUJhXpDcCxEdsJljOs';
+const SELLER_KEY = 'ct_seller_v1';
+const ANTHROPIC_KEY = 'ct_anthropic_v1';
+const SB_HEADERS = {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let containers = [], orders = [];
+let currentSeller = null, currentTab = 'dashboard';
+let filterStatus = 'all', searchQ = '';
+let editId = null, aiData = null, aiState = null, activeTab = 'info', editItems = [];
+let sellContainerId = null, sellQtys = {};
+let histContainerId = null, detailId = null;
+let orderView = 'list', editOrderId = null, orderDetailId = null, orderItems = [];
+let realtimeInterval = null;
+let prospects = [];
+let prospectSearch = '';
+let prospectFilter = 'all';
+let prospectDetailId = null;
+let editProspectId = null;
+
+// ── DB ────────────────────────────────────────────────────────────────────────
+async function dbGet(table) {
+  try {
+    const r = await fetch(SUPABASE_URL+'/rest/v1/'+table+'?select=*&order=created_at.desc', {headers:SB_HEADERS});
+    if (r.ok) return await r.json();
+  } catch(e) {}
+  return JSON.parse(localStorage.getItem('ct_'+table)||'[]');
+}
+async function dbSave(table, rec) {
+  try {
+    const r = await fetch(SUPABASE_URL+'/rest/v1/'+table, {method:'POST',headers:SB_HEADERS,body:JSON.stringify(rec)});
+    if (r.ok) { localStorage.setItem('ct_'+table, JSON.stringify(table==='containers'?containers:orders)); return true; }
+  } catch(e) {}
+  localStorage.setItem('ct_'+table, JSON.stringify(table==='containers'?containers:orders));
+  return true;
+}
+async function dbDelete(table, id) {
+  try { await fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+id, {method:'DELETE',headers:SB_HEADERS}); } catch(e) {}
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function sKey(c){if(c.arrival_date)return'arrived';if(c.full_pay_date)return'paid';if(c.adv_pay_date)return'partial';return'pending';}
+function sBadge(c){const k=sKey(c);const l={arrived:'Arrived',paid:'Fully paid',partial:'Advance paid',pending:'Pending'};return`<span class="badge ${k}">${l[k]}</span>`;}
+function fmt(d){return d?d.replace(/-/g,'/'):'—';}
+function money(v,cur){if(!v)return'—';const n=Number(v);if(cur==='COP')return'$'+n.toLocaleString('es-CO',{minimumFractionDigits:0})+' COP';return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' USD';}
+function availQty(it){return Math.max(0,Number(it.qty||0)-(it.sales||[]).reduce((s,x)=>s+Number(x.qty||0),0));}
+function soldQty(it){return(it.sales||[]).reduce((s,x)=>s+Number(x.qty||0),0);}
+function stockPct(it){const o=Number(it.qty||0);return o?Math.round((availQty(it)/o)*100):0;}
+function totalM2(c){const t=(c.items||[]).reduce((s,i)=>s+Number(i.qty||0),0);return t>0?t.toFixed(1):null;}
+function availM2(c){const t=(c.items||[]).reduce((s,i)=>s+availQty(i),0);return t>0?t.toFixed(1):null;}
+function orderStatusKey(o){const paid=paidTotal(o);const total=Number(o.total_usd||0);if(paid<=0)return'pending';if(paid>=total)return'paid';return'partial';}
+function orderStatusBadge(o){const s=orderStatusKey(o);const l={pending:'No payment',partial:'Partial payment',paid:'Fully paid'};const c={pending:'os-pending',partial:'os-partial',paid:'os-paid'};return`<span class="order-status ${c[s]}">${l[s]}</span>`;}
+function paidTotal(o){return(o.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);}
+function balanceDue(o){return Math.max(0,Number(o.total_usd||0)-paidTotal(o));}
+function gv(id){const e=document.getElementById(id);return e?e.value:'';}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function lowStockItems(){return containers.flatMap(c=>(c.items||[]).filter(i=>stockPct(i)<=20&&Number(i.qty||0)>0).map(i=>({...i,containerNo:c.container_no})));}
+function overdueOrders(){return orders.filter(o=>balanceDue(o)>0&&o.balance_due_date&&o.balance_due_date<new Date().toISOString().slice(0,10));}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  const seller = localStorage.getItem(SELLER_KEY);
+  if (!seller) { showLogin(); return; }
+  currentSeller = seller;
+  showLoading();
+  containers = await dbGet('containers');
+  orders = await dbGet('orders');
+  // Load prospects - preloaded with initial data if empty
+  const savedProspects = localStorage.getItem('ct_prospects_v1');
+  if (savedProspects) {
+    prospects = JSON.parse(savedProspects);
+  } else {
+    prospects = [{"id": "p1", "company": "Mármoles Bosconia Ltda", "address": "Cl 86 A 52 D-64, Ilagüí", "phone": "6043612276", "notes": "", "status": "new", "visits": []}, {"id": "p2", "company": "Maxirocas / Maxirocas s.a.s", "address": "CC IDEO Local 238 (Ilagüí)", "phone": "3015625536", "notes": "", "status": "new", "visits": []}, {"id": "p3", "company": "MADEMARMOL", "address": "Cra. 50A #40-83, Ilagüí", "phone": "3044328264", "notes": "", "status": "new", "visits": []}, {"id": "p4", "company": "Litko Sinterizados & Piedras", "address": "Cra. 44 #43-101, Medellín", "phone": "3137978505", "notes": "", "status": "new", "visits": []}, {"id": "p5", "company": "Mármoles & Decoraciones C. Urquijo", "address": "Cl. 2 Sur #50E-9, Guayabal", "phone": "3113147790", "notes": "", "status": "new", "visits": []}, {"id": "p6", "company": "Artes y Mármoles", "address": "Cr61 67-82, Aranjuez", "phone": "6042123444", "notes": "", "status": "new", "visits": []}, {"id": "p7", "company": "Alegsa Marmolería", "address": "Cr51 67-92, Aranjuez", "phone": "3042129840", "notes": "", "status": "new", "visits": []}, {"id": "p8", "company": "Marmolería Bolivariana", "address": "Cra. 51 #67-84, Aranjuez", "phone": "6042121840", "notes": "", "status": "new", "visits": []}, {"id": "p9", "company": "Marmolería Romana", "address": "Cr51 67-104, Aranjuez", "phone": "6042331379", "notes": "", "status": "new", "visits": []}, {"id": "p10", "company": "Todo Mármol", "address": "Cr51 67-106, Aranjuez", "phone": "6042110021", "notes": "", "status": "new", "visits": []}, {"id": "p11", "company": "Marmolería Metropolitana", "address": "Cr51 67-114, Aranjuez", "phone": "6042339949", "notes": "", "status": "new", "visits": []}, {"id": "p12", "company": "Marmolería Italia", "address": "Cr51 67-120, Aranjuez", "phone": "6042339949", "notes": "", "status": "new", "visits": []}, {"id": "p13", "company": "Botushino Mármoles y Granitos", "address": "Cr51 67-123, Aranjuez", "phone": "3228959935", "notes": "", "status": "new", "visits": []}, {"id": "p14", "company": "Marmolería Moderna", "address": "Cr51 67-136, Aranjuez", "phone": "6042125502", "notes": "", "status": "new", "visits": []}, {"id": "p15", "company": "Marmolería Modelo", "address": "Cr51 67-140, Aranjuez", "phone": "6042331068", "notes": "", "status": "new", "visits": []}, {"id": "p16", "company": "Marmolería San Francisco", "address": "Cr50 C 67-134, Aranjuez", "phone": "6042336955", "notes": "", "status": "new", "visits": []}, {"id": "p17", "company": "Mármoles y Cocinas Muriel", "address": "Cr50 C 67-134, Aranjuez", "phone": "3045798048", "notes": "", "status": "new", "visits": []}, {"id": "p18", "company": "Mármoles Y Detalles", "address": "Calle 75 #64a-51, Caribe", "phone": "6044429877", "notes": "", "status": "new", "visits": []}, {"id": "p19", "company": "Cocinas en Mármol", "address": "Cl 71 #65-401, Robledo", "phone": "3716195487", "notes": "", "status": "new", "visits": []}, {"id": "p20", "company": "Mármoles Sinaí", "address": "Cl 44 #79-140, Los Pinos", "phone": "3053995180", "notes": "", "status": "new", "visits": []}, {"id": "p21", "company": "Mármoles Flintstone", "address": "Cra. 79AA #44a-35, Los Pinos", "phone": "3004757709", "notes": "", "status": "new", "visits": []}, {"id": "p22", "company": "MyJ Mármol", "address": "Cl 44 #92-91, Campo Alegre", "phone": "3214853206", "notes": "", "status": "new", "visits": []}, {"id": "p23", "company": "La Casa del Mármol y el Granito", "address": "Cl 48DD #99CC-08, San Javier", "phone": "6045134142", "notes": "", "status": "new", "visits": []}, {"id": "p24", "company": "Mármoles y Anticados", "address": "Cr66 C 50-94, Centro", "phone": "6042317728", "notes": "", "status": "new", "visits": []}, {"id": "p25", "company": "Mármoles y Granitos Naturales", "address": "Cl. 67 #55 AB-35, Aranjuez", "phone": "6044483689", "notes": "", "status": "new", "visits": []}, {"id": "p26", "company": "Better Bod. International", "address": "Cra 55 60-65", "phone": "6044444532", "notes": "", "status": "new", "visits": []}, {"id": "p27", "company": "Mármol M.c", "address": "Cl 63 110-199", "phone": "6044204604", "notes": "", "status": "new", "visits": []}, {"id": "p28", "company": "Mármol Metal", "address": "Cl 63 110-117", "phone": "6045905927", "notes": "", "status": "new", "visits": []}, {"id": "p29", "company": "Marmolería M.c", "address": "Cl 63 45-03, Bello", "phone": "6044332229", "notes": "", "status": "new", "visits": []}, {"id": "p30", "company": "Acabados y Bellas Piedras", "address": "Cr65 E 26 A-130, Medellín", "phone": "6044449807", "notes": "", "status": "new", "visits": []}, {"id": "p31", "company": "Bello Mármoles", "address": "Cl 49 S 43 A-167, Envigado", "phone": "6042796395", "notes": "", "status": "new", "visits": []}, {"id": "p32", "company": "Vianova S.a.s.", "address": "Cl 29 73 S-165, Sabaneta", "phone": "6044113230", "notes": "", "status": "new", "visits": []}, {"id": "p33", "company": "Arte & Mármol", "address": "Cl 92 B S 49-153, La Estrella", "phone": "6044113230", "notes": "", "status": "new", "visits": []}, {"id": "p34", "company": "Enchapes Decorativos M. Herrera", "address": "Cl 35 80 A-03", "phone": "6042532524", "notes": "", "status": "new", "visits": []}, {"id": "p35", "company": "Dotar Decoraciones", "address": "Cl 39 A 91-33", "phone": "3154851342", "notes": "", "status": "new", "visits": []}, {"id": "p36", "company": "Marmolería Antioquia", "address": "Cl 30 A 71-18", "phone": "3155269921", "notes": "", "status": "new", "visits": []}, {"id": "p37", "company": "Marmolería Atenas", "address": "Cl 73 67-61", "phone": "", "notes": "", "status": "new", "visits": []}, {"id": "p38", "company": "Mármoles González", "address": "", "phone": "", "notes": "", "status": "new", "visits": []}];
+    localStorage.setItem('ct_prospects_v1', JSON.stringify(prospects));
+  }
+  startPolling();
+  renderApp();
+}
+
+function showLoading(){document.getElementById('root').innerHTML=`<div style="text-align:center;padding:5rem"><div class="spinner-lg"></div><p style="color:#888;font-size:13px">Loading...</p></div>`;}
+
+function showLogin(){
+  document.getElementById('root').innerHTML=`
+    <div class="login-wrap">
+      <div style="font-size:40px;margin-bottom:12px">📦</div>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">Stone Tracker</h2>
+      <p style="font-size:13px;color:#888;margin-bottom:1.5rem">Enter your name to continue</p>
+      <div class="fg" style="margin-bottom:14px;text-align:left">
+        <label>Your name</label>
+        <input id="sellerName" placeholder="e.g. Maria, Carlos..." style="height:48px;font-size:16px" autofocus>
+      </div>
+      <button class="btn primary" id="loginBtn" style="width:100%;justify-content:center;font-size:15px;height:48px">Enter →</button>
+    </div>`;
+  const go=async()=>{const n=document.getElementById('sellerName').value.trim();if(!n){alert('Please enter your name.');return;}currentSeller=n;localStorage.setItem(SELLER_KEY,n);showLoading();containers=await dbGet('containers');orders=await dbGet('orders');startPolling();renderApp();};
+  document.getElementById('loginBtn').onclick=go;
+  document.getElementById('sellerName').onkeydown=e=>{if(e.key==='Enter')go();};
+}
+
+function startPolling(){
+  if(realtimeInterval)clearInterval(realtimeInterval);
+  let lastHash=JSON.stringify(containers)+JSON.stringify(orders);
+  realtimeInterval=setInterval(async()=>{
+    try{
+      const [nc,no]=await Promise.all([dbGet('containers'),dbGet('orders')]);
+      const newHash=JSON.stringify(nc)+JSON.stringify(no);
+      if(newHash!==lastHash){lastHash=newHash;containers=nc;orders=no;renderApp();showToast('Stock updated!');}
+    }catch(e){}
+  },3000);
+}
+
+// ── RENDER APP ────────────────────────────────────────────────────────────────
+function renderApp(){
+  if(currentTab==='orders'){renderOrders();return;}
+  if(currentTab==='containers'){renderContainers();return;}
+  if(currentTab==='prospects'){renderProspects();return;}
+  renderDashboard();
+}
+
+function navHTML(active){
+  return`
+  <div class="nav-tabs">
+    <button class="nav-tab${active==='dashboard'?' active':''}" onclick="currentTab='dashboard';renderApp()">📊 Dashboard</button>
+    <button class="nav-tab${active==='containers'?' active':''}" onclick="currentTab='containers';renderApp()">📦 Containers</button>
+    <button class="nav-tab${active==='orders'?' active':''}" onclick="currentTab='orders';renderOrders()">🧾 Orders</button>
+    <button class="nav-tab${active==='prospects'?' active':''}" onclick="currentTab='prospects';renderProspects()">🎯 Prospects</button>
+  </div>
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="bnav-btn${active==='dashboard'?' active':''}" onclick="currentTab='dashboard';renderApp()"><span class="bnav-icon">📊</span>Dashboard</button>
+      <button class="bnav-btn${active==='containers'?' active':''}" onclick="currentTab='containers';renderApp()"><span class="bnav-icon">📦</span>Containers</button>
+      <button class="bnav-btn${active==='orders'?' active':''}" onclick="currentTab='orders';renderOrders()"><span class="bnav-icon">🧾</span>Orders</button>
+      <button class="bnav-btn${active==='prospects'?' active':''}" onclick="currentTab='prospects';renderProspects()"><span class="bnav-icon">🎯</span>Prospects</button>
+    </div>
+  </nav>`;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const totalAvail=containers.reduce((s,c)=>(c.items||[]).reduce((ss,i)=>ss+availQty(i),s),0);
+  const totalSold=containers.reduce((s,c)=>(c.items||[]).reduce((ss,i)=>ss+soldQty(i),s),0);
+  const totalBalance=orders.reduce((s,o)=>s+balanceDue(o),0);
+  const totalCollected=orders.reduce((s,o)=>s+paidTotal(o),0);
+  const low=lowStockItems();
+  const overdue=overdueOrders();
+  const arrived=containers.filter(c=>sKey(c)==='arrived').length;
+  const inTransit=containers.filter(c=>sKey(c)!=='arrived').length;
+  const prospectInterested=prospects.filter(p=>p.status==='interested').length;
+  const prospectNew=prospects.filter(p=>p.status==='new').length;
+
+  // Top colors by sold m²
+  const colorSales={};
+  containers.forEach(c=>(c.items||[]).forEach(it=>{
+    const k=it.colorName||'Unknown';
+    colorSales[k]=(colorSales[k]||0)+soldQty(it);
+  }));
+  const topColors=Object.entries(colorSales).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxSold=topColors[0]?topColors[0][1]:1;
+
+  document.getElementById('root').innerHTML=`
+    <div class="wrap">
+      <div class="topbar">
+        <h1>📊 Dashboard</h1>
+        <div class="topbar-actions">
+          <span style="font-size:12px;color:#888;display:flex;align-items:center;gap:5px"><span class="rt-dot"></span> Live</span>
+          <div class="seller-chip" id="sellerChip">👤 ${currentSeller} <span style="color:#aaa;font-size:10px">▼</span></div>
+        </div>
+      </div>
+      ${navHTML('dashboard')}
+
+      ${low.length>0?`<div class="alert-banner">⚠️ <strong>${low.length} product${low.length>1?'s':''} running low on stock!</strong> ${low.map(i=>`${i.colorName} (${i.containerNo}): ${availQty(i).toFixed(1)} m² left`).join(' · ')}</div>`:''}
+      ${overdue.length>0?`<div class="alert-banner" style="background:#FFF8E1;border-color:#FFD54F;color:#7B5800">⏰ <strong>${overdue.length} order${overdue.length>1?'s':''} with overdue balance!</strong> ${overdue.map(o=>`${o.client_name}: ${money(balanceDue(o),'USD')}`).join(' · ')}</div>`:''}
+
+      <div class="dash-grid">
+        <div class="dash-card">
+          <h3>Stock overview</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div><div class="dash-big blue">${totalAvail.toFixed(1)}</div><div class="dash-sub">m² available</div></div>
+            <div><div class="dash-big amber">${totalSold.toFixed(1)}</div><div class="dash-sub">m² sold</div></div>
+            <div><div class="dash-big green">${arrived}</div><div class="dash-sub">containers arrived</div></div>
+            <div><div class="dash-big" style="color:#3C3489">${inTransit}</div><div class="dash-sub">in transit</div></div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <h3>Payments overview</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div><div class="dash-big green">$${totalCollected.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div><div class="dash-sub">collected</div></div>
+            <div><div class="dash-big amber">$${totalBalance.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div><div class="dash-sub">pending</div></div>
+            <div><div class="dash-big blue">${orders.length}</div><div class="dash-sub">total orders</div></div>
+            <div><div class="dash-big green">${orders.filter(o=>orderStatusKey(o)==='paid').length}</div><div class="dash-sub">fully paid</div></div>
+          </div>
+        </div>
+        ${topColors.length>0?`
+        <div class="dash-card">
+          <h3>Top selling colors</h3>
+          ${topColors.map(([name,sold])=>`
+            <div class="progress-row">
+              <span style="min-width:120px;font-size:12px">${name}</span>
+              <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.round((sold/maxSold)*100)}%"></div></div>
+              <span style="font-size:12px;color:#888;min-width:50px;text-align:right">${sold.toFixed(1)} m²</span>
+            </div>`).join('')}
+        </div>`:''}
+        <div class="dash-card">
+          <h3>Prospects</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div><div class="dash-big" style="color:#185FA5">${prospectNew}</div><div class="dash-sub">not yet visited</div></div>
+            <div><div class="dash-big green">${prospectInterested}</div><div class="dash-sub">interested</div></div>
+          </div>
+          <button class="btn inv" style="width:100%;justify-content:center" onclick="currentTab='prospects';renderProspects()">🎯 View all prospects</button>
+        </div>
+        <div class="dash-card">
+          <h3>Quick actions</h3>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn primary" style="justify-content:center" onclick="currentTab='containers';editId=null;aiData=null;aiState=null;editItems=[];activeTab='invoice';renderApp();setTimeout(()=>document.getElementById('formOverlay').classList.add('open'),100)">📄 Read invoice</button>
+            <button class="btn success" style="justify-content:center" onclick="currentTab='orders';orderView='form';editOrderId=null;orderItems=[];renderOrders()">+ New client order</button>
+            <button class="btn inv" style="justify-content:center" onclick="currentTab='containers';renderApp()">📦 View all containers</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('sellerChip').onclick=()=>{if(confirm(`Signed in as: ${currentSeller}\n\nSwitch user?`)){localStorage.removeItem(SELLER_KEY);currentSeller=null;if(realtimeInterval)clearInterval(realtimeInterval);showLogin();}};
+}
+
+// ── CONTAINERS ────────────────────────────────────────────────────────────────
+function renderContainers(){
+  const rows=containers.filter(c=>{
+    const q=searchQ.toLowerCase();
+    const mQ=!q||c.container_no.toLowerCase().includes(q)||(c.client||'').toLowerCase().includes(q)||(c.origin||'').toLowerCase().includes(q);
+    return mQ&&(filterStatus==='all'||sKey(c)===filterStatus);
+  });
+
+  document.getElementById('root').innerHTML=`
+    <div class="wrap">
+      <div class="topbar">
+        <h1>📦 Containers</h1>
+        <div class="topbar-actions">
+          <button class="btn wa" id="waBtn">📲 <span>Share</span></button>
+          <button class="btn inv" id="invBtn">📄 <span>Invoice</span></button>
+          <button class="btn primary" id="addBtn">+ <span>Add</span></button>
+        </div>
+      </div>
+      ${navHTML('containers')}
+      <div class="toolbar">
+        <input type="text" id="srch" placeholder="Search..." value="${searchQ}" style="flex:1;min-width:120px;max-width:220px">
+        <select id="sfilt">
+          <option value="all"${filterStatus==='all'?' selected':''}>All</option>
+          <option value="pending"${filterStatus==='pending'?' selected':''}>Pending</option>
+          <option value="partial"${filterStatus==='partial'?' selected':''}>Advance paid</option>
+          <option value="paid"${filterStatus==='paid'?' selected':''}>Fully paid</option>
+          <option value="arrived"${filterStatus==='arrived'?' selected':''}>Arrived</option>
+        </select>
+        <button class="btn sm" id="expBtn">⬇ CSV</button>
+      </div>
+
+      ${rows.length===0?`<div class="empty">📦<br><br>${containers.length===0?'No containers yet.':'No results — try clearing the search.'}</div>`:`
+
+      <!-- MOBILE CARDS -->
+      <div class="container-cards">
+        ${rows.map(c=>{
+          const m2=totalM2(c)||'—';const av=availM2(c)||'0';
+          const sold=(c.items||[]).reduce((s,i)=>s+soldQty(i),0).toFixed(1);
+          const cnt=(c.items||[]).length;
+          return`<div class="container-card" data-detail="${c.id}">
+            <div class="cc-header">
+              <span class="cc-no">${c.container_no}</span>
+              ${sBadge(c)}
+            </div>
+            <div class="cc-meta">${c.material||''} · ${c.client||''} · ${c.origin||''}</div>
+            <div class="cc-stock">
+              <div class="cc-stock-item"><div class="cc-stock-label">Available</div><div class="cc-stock-val green">${av} m²</div></div>
+              <div class="cc-stock-item"><div class="cc-stock-label">Sold</div><div class="cc-stock-val amber">${sold} m²</div></div>
+            </div>
+            ${cnt>0?`<div class="cc-products">${(c.items||[]).map(it=>{const p=stockPct(it);const bc=p>50?'#3B6D11':p>20?'#BA7517':'#A32D2D';return`${it.colorName||''}: <strong style="color:${bc}">${availQty(it).toFixed(1)} m²</strong>`;}).join(' · ')}</div>`:''}
+            <div class="cc-actions" style="margin-top:10px">
+              ${cnt>0?`<button class="btn sm success" data-sell="${c.id}">🛒 Sell</button>`:''}
+              <button class="btn sm inv" data-detail="${c.id}">👁 View</button>
+              <button class="btn sm" data-edit="${c.id}" onclick="event.stopPropagation()">✏️</button>
+              <button class="btn sm danger" data-del="${c.id}" onclick="event.stopPropagation()">🗑</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- DESKTOP TABLE -->
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:120px">Container #</th>
+            <th style="width:85px">Material</th>
+            <th style="width:130px">Client</th>
+            <th style="width:65px">SKUs</th>
+            <th style="width:85px">Total m²</th>
+            <th style="width:90px">Available</th>
+            <th style="width:70px">Sold</th>
+            <th style="width:90px">Status</th>
+            <th style="width:110px">Actions</th>
+          </tr></thead>
+          <tbody>
+            ${rows.map(c=>{
+              const m2=totalM2(c);const av=availM2(c);
+              const sold=(c.items||[]).reduce((s,i)=>s+soldQty(i),0).toFixed(1);
+              const cnt=(c.items||[]).length;
+              const allOut=cnt>0&&c.items.every(i=>availQty(i)<=0);
+              return`<tr>
+                <td><strong style="font-family:monospace;font-size:12px">${c.container_no}</strong></td>
+                <td>${c.material||'—'}</td>
+                <td title="${c.client||''}">${c.client||'—'}</td>
+                <td>${cnt>0?`<strong style="color:#185FA5">${cnt}</strong>`:'—'}</td>
+                <td>${m2?`<strong>${m2} m²</strong>`:'—'}</td>
+                <td>${av?`<strong style="color:${allOut?'#A32D2D':'#3B6D11'}">${av} m²</strong>`:'—'}</td>
+                <td>${Number(sold)>0?`<span style="color:#BA7517">${sold} m²</span>`:'—'}</td>
+                <td>${sBadge(c)}</td>
+                <td style="display:flex;gap:3px;align-items:center">
+                  ${cnt>0?`<button class="btn sm success" data-sell="${c.id}">🛒</button>`:''}
+                  <button class="btn sm" data-detail="${c.id}">👁</button>
+                  <button class="btn sm" data-edit="${c.id}">✏️</button>
+                  <button class="btn sm danger" data-del="${c.id}">🗑</button>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`}
+    </div>`;
+
+  document.getElementById('addBtn').onclick=()=>{editId=null;aiData=null;aiState=null;editItems=[];activeTab='info';openForm();};
+  document.getElementById('invBtn').onclick=()=>{editId=null;aiData=null;aiState=null;editItems=[];activeTab='invoice';openForm();};
+  document.getElementById('waBtn').onclick=shareWhatsApp;
+  document.getElementById('srch').oninput=e=>{searchQ=e.target.value;renderContainers();};
+  document.getElementById('sfilt').onchange=e=>{filterStatus=e.target.value;renderContainers();};
+  document.getElementById('expBtn').onclick=exportCSV;
+  document.querySelectorAll('[data-sell]').forEach(b=>b.onclick=e=>{e.stopPropagation();sellContainerId=b.dataset.sell;sellQtys={};openSell();});
+  document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=e=>{if(e.target.dataset.detail){detailId=e.target.dataset.detail||b.dataset.detail;openDetail(detailId);}});
+  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=e=>{e.stopPropagation();const c=containers.find(x=>x.id===b.dataset.edit);editId=b.dataset.edit;editItems=c&&c.items?JSON.parse(JSON.stringify(c.items)):[];aiData=null;aiState=null;activeTab='info';openForm();});
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=async e=>{e.stopPropagation();if(!confirm('Delete this container?'))return;await dbDelete('containers',b.dataset.del);containers=containers.filter(c=>c.id!==b.dataset.del);renderContainers();showToast('Deleted');});
+}
+
+// ── WHATSAPP ──────────────────────────────────────────────────────────────────
+function shareWhatsApp(){
+  const appUrl=window.location.href.split('?')[0];
+  const text='Hola! Aqui puedes ver y actualizar el stock de piedra en vivo:\n'+appUrl;
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+}
+
+function shareClientWhatsApp(o){
+  const balance=balanceDue(o);
+  const text=`Hola ${o.client_name}!\n\nResumen de su pedido:\nTotal: ${money(o.total_usd,o.currency||'USD')}\nPagado: ${money(paidTotal(o),o.currency||'USD')}\nSaldo pendiente: ${money(balance,o.currency||'USD')}${o.balance_due_date?'\nFecha limite: '+fmt(o.balance_due_date):''}\n\nGracias por su compra!`;
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+}
+
+// ── FORM ──────────────────────────────────────────────────────────────────────
+function openForm(){
+  const c=editId?containers.find(x=>x.id===editId):{};
+  const ex=aiData||{};
+  const m=f=>ex[f]||(c&&c[f])||'';
+  const ai=f=>ex[f]?'ai':'';
+  document.getElementById('formModal').innerHTML=`
+    <h2>${editId?'✏️ Edit container':'➕ Add container'}</h2>
+    <div class="tabs">
+      <button class="tab${activeTab==='invoice'?' active':''}" data-tab="invoice">📄 Invoice</button>
+      <button class="tab${activeTab==='info'?' active':''}" data-tab="info">📦 Info</button>
+      <button class="tab${activeTab==='items'?' active':''}" data-tab="items">🎨 Products</button>
+    </div>
+    ${activeTab==='invoice'?`
+      <div id="aib">${aiBar()}</div>
+      <div class="upload-zone">
+        <div style="font-size:32px">📄</div>
+        <p><strong>Upload invoice</strong></p>
+        <p>PDF, Word (.docx), Excel (.xls/.xlsx), JPG, PNG</p>
+        <input type="file" id="invFile" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,.xls,image/*,application/pdf">
+      </div>
+      <p style="font-size:12px;color:#888">After upload check Info and Products tabs.</p>
+    `:''}
+    ${activeTab==='info'?`
+      <div class="form-grid">
+        <div class="fg full"><label>Container number *</label><input id="f_cn" placeholder="e.g. MSCU1234567" value="${m('container_no')}" class="${ai('container_no')}"></div>
+        <div class="fg"><label>Material</label><select id="f_mat">${['','Marble','Granite','Sinterized stone','Mixed'].map(v=>`<option value="${v}"${m('material')===v?' selected':''}>${v||'Select...'}</option>`).join('')}</select></div>
+        <div class="fg"><label>Origin port</label><input id="f_ori" placeholder="e.g. Shanghai" value="${m('origin')}" class="${ai('origin')}"></div>
+        <div class="fg full"><label>Client in Colombia *</label><input id="f_cli" placeholder="Client name" value="${m('client')}" class="${ai('client')}"></div>
+        <div class="fg"><label>Advance payment date</label><input type="date" id="f_apd" value="${m('adv_pay_date')}" class="${ai('adv_pay_date')}"></div>
+        <div class="fg"><label>Advance amount (USD)</label><input type="number" id="f_apa" placeholder="0.00" value="${m('adv_amount')}" class="${ai('adv_amount')}"></div>
+        <div class="fg"><label>Full payment date</label><input type="date" id="f_fpd" value="${m('full_pay_date')}"></div>
+        <div class="fg"><label>Total invoice (USD)</label><input type="number" id="f_tot" placeholder="0.00" value="${m('total_amount')}" class="${ai('total_amount')}"></div>
+        <div class="fg"><label>Estimated departure</label><input type="date" id="f_dep" value="${m('depart_date')}" class="${ai('depart_date')}"></div>
+        <div class="fg"><label>Arrival date</label><input type="date" id="f_arr" value="${m('arrival_date')}"></div>
+        <div class="fg full"><label>Notes</label><textarea id="f_nts" placeholder="Invoice #, reference...">${m('notes')}</textarea></div>
+      </div>
+    `:''}
+    ${activeTab==='items'?`<div id="itemsSection">${itemsTable()}</div>`:''}
+    <div class="modal-footer">
+      <button class="btn" id="cancelBtn" style="min-width:100px">← Back</button>
+      <button class="btn primary" id="saveBtn">✓ ${editId?'Save':'Add container'}</button>
+    </div>`;
+
+  document.getElementById('formOverlay').classList.add('open');
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{activeTab=t.dataset.tab;openForm();});
+  document.getElementById('cancelBtn').onclick=()=>document.getElementById('formOverlay').classList.remove('open');
+  document.getElementById('saveBtn').onclick=saveRec;
+  if(activeTab==='invoice'&&document.getElementById('invFile'))document.getElementById('invFile').onchange=handleInvoice;
+  if(activeTab==='items')bindItems();
+}
+
+function aiBar(){if(!aiState)return'';if(aiState==='loading')return`<div class="ai-bar loading"><div class="spinner"></div> Reading invoice with AI...</div>`;if(aiState==='ok')return`<div class="ai-bar ok">✓ Invoice read — green fields auto-filled.</div>`;if(aiState==='err')return`<div class="ai-bar err" id="aiErrMsg">⚠ Could not read invoice. Fill manually or try another file.</div>`;return'';}
+
+function itemsTable(){
+  const rows=editItems.map((it,i)=>`<tr>
+    <td><input type="color" value="${it.color||'#cccccc'}" data-f="color" data-i="${i}" style="width:38px;padding:1px 3px"></td>
+    <td><input type="text" value="${it.colorName||''}" placeholder="Color name" data-f="colorName" data-i="${i}" style="min-width:80px"></td>
+    <td><input type="text" value="${it.finish||''}" placeholder="Polished" data-f="finish" data-i="${i}" style="min-width:60px"></td>
+    <td><input type="text" value="${it.thickness||''}" placeholder="2cm" data-f="thickness" data-i="${i}" style="min-width:44px"></td>
+    <td><input type="number" value="${it.qty||''}" placeholder="m²" data-f="qty" data-i="${i}" style="min-width:50px"></td>
+    <td><input type="number" value="${it.unitPrice||''}" placeholder="$/m²" data-f="unitPrice" data-i="${i}" style="min-width:55px"></td>
+    <td style="text-align:right;font-weight:700;font-size:12px">${it.qty&&it.unitPrice?'$'+(Number(it.qty)*Number(it.unitPrice)).toFixed(2):'—'}</td>
+    <td><button class="btn sm danger" data-di="${i}">🗑</button></td>
+  </tr>`).join('');
+  const total=editItems.reduce((s,it)=>s+(Number(it.qty||0)*Number(it.unitPrice||0)),0);
+  return`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="font-size:13px">Product line items</strong><button class="btn sm primary" id="addItemBtn">+ Add row</button></div>
+    <div style="overflow:auto"><table class="items-tbl"><thead><tr><th style="width:42px">Color</th><th>Name</th><th>Finish</th><th>Thick.</th><th>Qty</th><th>$/m²</th><th style="text-align:right">Total</th><th style="width:34px"></th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${total>0?`<div style="text-align:right;font-size:13px;font-weight:700;margin-top:8px;color:#185FA5">Total: $${total.toFixed(2)}</div>`:''}`;
+}
+
+function bindItems(){
+  const aib=document.getElementById('addItemBtn');
+  if(aib)aib.onclick=()=>{editItems.push({color:'#cccccc',colorName:'',finish:'',thickness:'',qty:'',unitPrice:'',sales:[]});const s=document.getElementById('itemsSection');if(s){s.innerHTML=itemsTable();bindItems();}};
+  document.querySelectorAll('[data-di]').forEach(b=>b.onclick=()=>{editItems.splice(Number(b.dataset.di),1);const s=document.getElementById('itemsSection');if(s){s.innerHTML=itemsTable();bindItems();}});
+  document.querySelectorAll('[data-f]').forEach(inp=>inp.oninput=e=>{const i=Number(e.target.dataset.i);editItems[i][e.target.dataset.f]=e.target.value;if(['qty','unitPrice'].includes(e.target.dataset.f)){const s=document.getElementById('itemsSection');if(s){s.innerHTML=itemsTable();bindItems();}}});
+}
+
+async function saveRec(){
+  const containerNo=gv('f_cn').trim().toUpperCase();const client=gv('f_cli').trim();
+  if(!containerNo||!client){alert('Container number and client are required.');return;}
+  const btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='Saving...';
+  const existing=editId?containers.find(x=>x.id===editId):{};
+  const merged=editItems.map((it,i)=>{const orig=existing&&existing.items&&existing.items[i];return{...it,sales:(orig&&orig.sales)?orig.sales:(it.sales||[])};});
+  const rec={id:editId||Date.now().toString(),container_no:containerNo,client,material:gv('f_mat'),origin:gv('f_ori').trim(),adv_pay_date:gv('f_apd')||null,adv_amount:gv('f_apa')?Number(gv('f_apa')):null,full_pay_date:gv('f_fpd')||null,total_amount:gv('f_tot')?Number(gv('f_tot')):null,depart_date:gv('f_dep')||null,arrival_date:gv('f_arr')||null,notes:gv('f_nts').trim(),items:merged,created_at:existing.created_at||new Date().toISOString()};
+  await dbSave('containers',rec);
+  if(editId)containers=containers.map(c=>c.id===editId?rec:c);else containers.unshift(rec);
+  document.getElementById('formOverlay').classList.remove('open');
+  editId=null;aiData=null;aiState=null;editItems=[];
+  renderApp();showToast('✓ Container saved');
+}
+
+// ── INVOICE AI ────────────────────────────────────────────────────────────────
+async function handleInvoice(e){
+  const file=e.target.files[0];if(!file)return;
+  aiState='loading';aiData=null;
+  document.getElementById('aib').innerHTML=aiBar();
+  try{
+    let apiKey=localStorage.getItem(ANTHROPIC_KEY)||'';
+    if(!apiKey){const k=prompt('Paste your Anthropic API key (console.anthropic.com → API Keys):','');if(!k){aiState='err';activeTab='invoice';openForm();return;}localStorage.setItem(ANTHROPIC_KEY,k);apiKey=k;}
+    const fname=file.name.toLowerCase();
+    const isDocx=fname.endsWith('.docx');
+    const isExcel=fname.endsWith('.xlsx')||fname.endsWith('.xls');
+    const isPDF=fname.endsWith('.pdf')||file.type==='application/pdf';
+    const PROMPT='You are parsing a shipping invoice for stone/marble import. Return ONLY a valid JSON object, no markdown.\n\nExtract: container_no, material (Marble|Granite|Sinterized stone|Mixed|null), origin, client, total_amount (number), depart_date (YYYY-MM-DD), adv_pay_date (YYYY-MM-DD), adv_amount (number), notes (under 80 chars).\n\nitems array: colorName, color (hex for that stone), finish, thickness, qty (number m²), unitPrice (number per m²).\n\nReturn ONLY the JSON.';
+    let messages=[];
+    if(isDocx){
+      if(!window.JSZip){await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');}
+      const ab=await file.arrayBuffer();const zip=await window.JSZip.loadAsync(ab);
+      let docText='';
+      if(zip.files['word/document.xml']){const xml=await zip.files['word/document.xml'].async('string');docText=xml.replace(/<w:t[^>]*>/g,' ').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();}
+      const mediaFiles=Object.keys(zip.files).filter(n=>n.startsWith('word/media/')&&(n.endsWith('.png')||n.endsWith('.jpg')||n.endsWith('.jpeg'))).slice(0,2);
+      const blocks=[];
+      if(docText.length>100)blocks.push({type:'text',text:'Document text:\n'+docText.slice(0,3000)+'\n\n'});
+      for(const mf of mediaFiles){const imgB64=await zip.files[mf].async('base64');const mt=mf.endsWith('.png')?'image/png':'image/jpeg';blocks.push({type:'image',source:{type:'base64',media_type:mt,data:imgB64}});}
+      blocks.push({type:'text',text:PROMPT});
+      messages=[{role:'user',content:blocks}];
+    } else if(isExcel){
+      if(!window.XLSX){await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');}
+      const ab=await file.arrayBuffer();
+      const wb=window.XLSX.read(new Uint8Array(ab),{type:'array',cellFormulas:false,cellHTML:false,raw:false});
+      let allText='';
+      for(const name of wb.SheetNames){const ws=wb.Sheets[name];const rows=window.XLSX.utils.sheet_to_json(ws,{header:1,defval:'',blankrows:false,raw:false});const useful=rows.filter(r=>r.some(c=>String(c||'').trim()!==''));if(useful.length){allText+=`Sheet: ${name}\n`;useful.forEach(r=>{const line=r.slice(0,15).map(c=>String(c||'').trim()).filter(c=>c).join(' | ');if(line)allText+=line+'\n';});allText+='\n';}}
+      if(!allText.trim())throw new Error('Excel file appears empty');
+      messages=[{role:'user',content:[{type:'text',text:'Shipping invoice from Excel:\n\n'+allText+'\n\n'+PROMPT}]}];
+    } else if(isPDF){
+      const b64=await toB64(file);
+      messages=[{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},{type:'text',text:PROMPT}]}];
+    } else {
+      const b64=await toB64(file);const mt=fname.endsWith('.png')?'image/png':'image/jpeg';
+      messages=[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:PROMPT}]}];
+    }
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,messages})});
+    if(!resp.ok){const err=await resp.json().catch(()=>({error:{message:'HTTP '+resp.status}}));throw new Error(err.error?.message||'API error');}
+    const data=await resp.json();
+    if(data.error)throw new Error(data.error.message);
+    const txt=data.content.map(b=>b.text||'').join('').trim().replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(txt);
+    aiData=parsed;
+    if(parsed.items&&parsed.items.length)editItems=parsed.items.map(it=>({color:it.color||'#cccccc',colorName:it.colorName||'',finish:it.finish||'',thickness:it.thickness||'',qty:it.qty||'',unitPrice:it.unitPrice||'',sales:[]}));
+    aiState='ok';
+  }catch(err){console.error(err);aiState='err';const aib=document.getElementById('aib');if(aib)aib.innerHTML=`<div class="ai-bar err">⚠ ${err.message||'Could not read invoice'}. Try saving as PDF and uploading that.</div>`;activeTab='invoice';openForm();return;}
+  activeTab='info';openForm();
+}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Failed to load: '+src));document.head.appendChild(s);});}
+function toB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(new Error('Read failed'));r.readAsDataURL(file);});}
+
+// ── DETAIL ────────────────────────────────────────────────────────────────────
+function openDetail(id){
+  const c=containers.find(x=>x.id===id);if(!c)return;
+  const m2=totalM2(c);const av=availM2(c);
+  document.getElementById('detailModal').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+      <h2 style="font-family:monospace;font-size:17px;margin:0">${c.container_no}</h2>
+      ${sBadge(c)}
+      <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
+        ${c.items&&c.items.length?`<button class="btn sm success" id="dsell">🛒 Sell</button>`:''}
+        ${c.items&&c.items.length?`<button class="btn sm inv" id="dhist">📋 History</button>`:''}
+        <button class="btn sm" id="ddup">⧉ Duplicate</button>
+        <button class="btn sm" id="dedit">✏️ Edit</button>
+        <button class="btn sm" id="dclose" class="btn sm modal-close-btn">✕</button>
+      </div>
+    </div>
+    <div class="detail-section"><h3>Shipment info</h3>
+      <div class="kv">
+        <span class="kv-label">Material</span><span class="kv-val">${c.material||'—'}</span>
+        <span class="kv-label">Origin port</span><span class="kv-val">${c.origin||'—'}</span>
+        <span class="kv-label">Client</span><span class="kv-val">${c.client||'—'}</span>
+        <span class="kv-label">Departure</span><span class="kv-val">${fmt(c.depart_date)}</span>
+        <span class="kv-label">Arrival</span><span class="kv-val">${fmt(c.arrival_date)}</span>
+        <span class="kv-label">Notes</span><span class="kv-val">${c.notes||'—'}</span>
+      </div>
+    </div>
+    <div class="detail-section"><h3>Payments</h3>
+      <div class="kv">
+        <span class="kv-label">Advance paid on</span><span class="kv-val">${fmt(c.adv_pay_date)}</span>
+        <span class="kv-label">Advance amount</span><span class="kv-val">${money(c.adv_amount,'USD')}</span>
+        <span class="kv-label">Full payment on</span><span class="kv-val">${fmt(c.full_pay_date)}</span>
+        <span class="kv-label">Total invoice</span><span class="kv-val">${money(c.total_amount,'USD')}</span>
+        ${c.total_amount&&c.adv_amount?`<span class="kv-label">Balance due</span><span class="kv-val" style="color:#BA7517">${money(Number(c.total_amount)-Number(c.adv_amount),'USD')}</span>`:''}
+      </div>
+    </div>
+    ${c.items&&c.items.length?`
+    <div class="detail-section"><h3>Stock — ${av||'0'} m² available of ${m2||'0'} m²</h3>
+      <div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;width:32px">Color</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Product</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:right">Original</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:right">Sold</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:right">Available</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;width:80px">Stock</th>
+        </tr></thead>
+        <tbody>
+          ${(c.items||[]).map(it=>{const a=availQty(it);const p=stockPct(it);const bc=p>50?'#3B6D11':p>20?'#BA7517':'#A32D2D';
+            return`<tr>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee"><span class="swatch" style="background:${it.color||'#ccc'};width:18px;height:18px;border-radius:3px;display:inline-block"></span></td>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee"><strong>${it.colorName||'—'}</strong><div style="font-size:11px;color:#888">${[it.finish,it.thickness].filter(Boolean).join(' · ')}</div></td>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee;text-align:right">${Number(it.qty||0).toFixed(1)} m²</td>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee;text-align:right;color:#BA7517">${soldQty(it).toFixed(1)} m²</td>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee;text-align:right;font-weight:700;color:${a<=0?'#A32D2D':p<=20?'#BA7517':'#3B6D11'}">${a.toFixed(1)} m²</td>
+              <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee"><div style="display:flex;align-items:center;gap:4px"><div style="flex:1;background:#eee;border-radius:4px;height:6px"><div style="width:${p}%;background:${bc};height:6px;border-radius:4px"></div></div><span style="font-size:10px;color:#888">${p}%</span></div></td>
+            </tr>`;}).join('')}
+        </tbody>
+      </table></div>
+    </div>`:''}`;
+
+  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('dclose').onclick=()=>document.getElementById('detailOverlay').classList.remove('open');
+  const ds=document.getElementById('dsell');
+  if(ds)ds.onclick=()=>{document.getElementById('detailOverlay').classList.remove('open');sellContainerId=id;sellQtys={};openSell();};
+  const dh=document.getElementById('dhist');
+  if(dh)dh.onclick=()=>{document.getElementById('detailOverlay').classList.remove('open');histContainerId=id;openHistory();};
+  document.getElementById('ddup').onclick=()=>{
+    const c=containers.find(x=>x.id===id);const dup={...JSON.parse(JSON.stringify(c)),id:Date.now().toString(),container_no:c.container_no+'_COPY',items:(c.items||[]).map(it=>({...it,sales:[]})),created_at:new Date().toISOString()};
+    dbSave('containers',dup);containers.unshift(dup);
+    document.getElementById('detailOverlay').classList.remove('open');
+    renderApp();showToast('Container duplicated!');
+  };
+  document.getElementById('dedit').onclick=()=>{document.getElementById('detailOverlay').classList.remove('open');const cc=containers.find(x=>x.id===id);editId=id;editItems=cc&&cc.items?JSON.parse(JSON.stringify(cc.items)):[];aiData=null;aiState=null;activeTab='info';openForm();};
+}
+
+// ── SELL ──────────────────────────────────────────────────────────────────────
+function openSell(){
+  const c=containers.find(x=>x.id===sellContainerId);if(!c||!c.items||!c.items.length)return;
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('sellModal').innerHTML=`
+    <h2>🛒 Record sale — <span style="font-family:monospace">${c.container_no}</span></h2>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">Seller: <strong>${currentSeller}</strong></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
+      <div class="fg"><label>Buyer name</label><input id="sb" placeholder="Client name"></div>
+      <div class="fg"><label>Sale date</label><input type="date" id="sd" value="${today}"></div>
+      <div class="fg full"><label>Notes (optional)</label><input id="sn" placeholder="Invoice #, reference..."></div>
+    </div>
+    <p style="font-size:12px;font-weight:700;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.03em">m² to sell per product</p>
+    ${c.items.map((it,i)=>{const avail=availQty(it);const pct=stockPct(it);const bc=pct>50?'#3B6D11':pct>20?'#BA7517':'#A32D2D';
+      return`<div class="sale-row">
+        <span class="swatch" style="background:${it.color||'#ccc'};width:20px;height:20px;border-radius:4px"></span>
+        <div>
+          <div style="font-weight:700">${it.colorName||'Product '+(i+1)}</div>
+          <div style="font-size:11px;color:#888">${[it.finish,it.thickness].filter(Boolean).join(' · ')}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            ${avail<=0?`<span class="avail-chip avail-out">Out of stock</span>`:pct<=20?`<span class="avail-chip avail-low">${avail.toFixed(1)} m² left</span>`:`<span class="avail-chip avail-ok">${avail.toFixed(1)} m² available</span>`}
+          </div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:#888">
+          <div>${Number(it.qty||0).toFixed(1)} m² total</div>
+          <div style="color:#BA7517">${soldQty(it).toFixed(1)} m² sold</div>
+        </div>
+        <div>
+          <input type="number" class="sale-qty-input" id="sq_${i}" placeholder="0" min="0" max="${avail}" step="0.1" ${avail<=0?'disabled style="opacity:0.4"':''}>
+          <div style="font-size:10px;color:#aaa;text-align:center;margin-top:2px">m² to sell</div>
+        </div>
+      </div>`;}).join('')}
+    <div id="sellTotal" style="text-align:right;margin-top:10px;font-size:14px;font-weight:700;color:#185FA5"></div>
+    <div class="modal-footer">
+      <button class="btn" id="cancelSell" style="min-width:100px">← Back</button>
+      <button class="btn success" id="confirmSell">✓ Confirm sale</button>
+    </div>`;
+
+  document.getElementById('sellOverlay').classList.add('open');
+  document.getElementById('cancelSell').onclick=()=>document.getElementById('sellOverlay').classList.remove('open');
+  c.items.forEach((_,i)=>{const inp=document.getElementById('sq_'+i);if(!inp)return;inp.oninput=e=>{sellQtys[i]=e.target.value;const t=Object.values(sellQtys).reduce((s,v)=>s+Number(v||0),0);const el=document.getElementById('sellTotal');if(el)el.textContent=t>0?'Total: '+t.toFixed(1)+' m²':'';};});
+  document.getElementById('confirmSell').onclick=async()=>{
+    const buyer=document.getElementById('sb').value.trim();
+    const date=document.getElementById('sd').value||new Date().toISOString().slice(0,10);
+    const note=document.getElementById('sn').value.trim();
+    let any=false;let errs=[];
+    c.items.forEach((it,i)=>{const qty=Number(sellQtys[i]||0);if(qty<=0)return;const av=availQty(it);if(qty>av){errs.push(`"${it.colorName}" — only ${av.toFixed(1)} m² available`);return;}if(!it.sales)it.sales=[];it.sales.push({id:Date.now().toString()+i,qty,buyer,date,note,seller:currentSeller});any=true;});
+    if(errs.length){alert('Stock error:\n'+errs.join('\n'));return;}
+    if(!any){alert('Enter at least one quantity.');return;}
+    const btn=document.getElementById('confirmSell');btn.disabled=true;btn.textContent='Saving...';
+    await dbSave('containers',c);containers=containers.map(x=>x.id===c.id?c:x);
+    document.getElementById('sellOverlay').classList.remove('open');
+    sellQtys={};renderApp();showToast('✓ Sale recorded by '+currentSeller);
+  };
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────────────────
+function openHistory(){
+  const c=containers.find(x=>x.id===histContainerId);if(!c)return;
+  const all=[];
+  (c.items||[]).forEach((it,idx)=>(it.sales||[]).forEach(s=>all.push({...s,colorName:it.colorName,color:it.color,itemIdx:idx})));
+  all.sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('histModal').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+      <h2 style="margin:0">📋 Sales — <span style="font-family:monospace">${c.container_no}</span></h2>
+      <button class="btn sm" id="hclose" class="btn sm modal-close-btn" style="margin-left:auto">✕</button>
+    </div>
+    ${all.length===0?`<div class="empty">No sales yet.</div>`:`
+    <div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Color</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Product</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Date</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Qty</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Buyer</th>
+        <th style="padding:8px;background:#f8f8f6;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Seller</th>
+        <th style="padding:8px;background:#f8f8f6;width:36px;border-bottom:0.5px solid #e0e0da"></th>
+      </tr></thead>
+      <tbody>
+        ${all.map(s=>`<tr>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee"><span class="swatch" style="background:${s.color||'#ccc'};width:16px;height:16px;border-radius:3px;display:inline-block"></span></td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee">${s.colorName||'—'}</td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee;font-size:12px">${fmt(s.date)}</td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee"><strong>${Number(s.qty).toFixed(1)} m²</strong></td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee">${s.buyer||'—'}</td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee;font-size:12px;color:#888">${s.seller||'—'}</td>
+          <td style="padding:8px;border-bottom:0.5px solid #f0f0ee"><button class="btn sm danger" data-ds="${s.id}" data-di="${s.itemIdx}">🗑</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`}`;
+
+  document.getElementById('histOverlay').classList.add('open');
+  document.getElementById('hclose').onclick=()=>document.getElementById('histOverlay').classList.remove('open');
+  document.querySelectorAll('[data-ds]').forEach(b=>b.onclick=async()=>{if(!confirm('Undo this sale?'))return;const cc=containers.find(x=>x.id===histContainerId);const idx=Number(b.dataset.di);cc.items[idx].sales=(cc.items[idx].sales||[]).filter(s=>s.id!==b.dataset.ds);await dbSave('containers',cc);containers=containers.map(x=>x.id===cc.id?cc:x);openHistory();showToast('Sale undone');});
+}
+
+// ── ORDERS ────────────────────────────────────────────────────────────────────
+function renderOrders(){
+  if(orderView==='form'){document.getElementById('root').innerHTML=renderOrderForm();bindOrderForm();return;}
+  if(orderView==='detail'){document.getElementById('root').innerHTML=renderOrderDetail();bindOrderDetail();return;}
+  const totalBalance=orders.reduce((s,o)=>s+balanceDue(o),0);
+  const totalCollected=orders.reduce((s,o)=>s+paidTotal(o),0);
+  document.getElementById('root').innerHTML=`
+    <div class="wrap">
+      <div class="topbar">
+        <h1>🧾 Client Orders</h1>
+        <div class="topbar-actions">
+          <button class="btn primary" id="addOrderBtn">+ <span>New order</span></button>
+        </div>
+      </div>
+      ${navHTML('orders')}
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Orders</div><div class="stat-val blue">${orders.length}</div></div>
+        <div class="stat"><div class="stat-label">Fully paid</div><div class="stat-val green">${orders.filter(o=>orderStatusKey(o)==='paid').length}</div></div>
+        <div class="stat"><div class="stat-label">Collected</div><div class="stat-val green">$${totalCollected.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
+        <div class="stat"><div class="stat-label">Pending balance</div><div class="stat-val amber">$${totalBalance.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
+      </div>
+      ${orders.length===0?`<div class="empty">🧾<br><br>No client orders yet.</div>`:
+        orders.map(o=>`
+        <div class="order-card">
+          <div class="order-card-header">
+            <span class="order-client">${o.client_name}</span>
+            ${orderStatusBadge(o)}
+          </div>
+          <div class="order-meta">
+            <span>${o.client_phone||''}</span>
+            <span>📅 ${fmt(o.order_date)}</span>
+            <span>👤 ${o.seller||''}</span>
+          </div>
+          <div class="order-amounts">
+            <div class="amount-box"><label>Total order</label><strong>${money(o.total_usd,o.currency||'USD')}</strong></div>
+            <div class="amount-box"><label>Paid</label><strong style="color:#3B6D11">${money(paidTotal(o),o.currency||'USD')}</strong></div>
+            <div class="amount-box"><label>Balance due</label><strong style="color:${balanceDue(o)>0?'#BA7517':'#3B6D11'}">${money(balanceDue(o),o.currency||'USD')}</strong></div>
+            ${o.balance_due_date?`<div class="amount-box"><label>Due date</label><strong style="color:${o.balance_due_date<new Date().toISOString().slice(0,10)&&balanceDue(o)>0?'#A32D2D':'#1a1a1a'}">${fmt(o.balance_due_date)}</strong></div>`:''}
+          </div>
+          <div style="font-size:12px;color:#888;margin-top:8px">${(o.items||[]).map(it=>`${it.colorName} — ${it.qty} m²`).join(' · ')}</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn sm success" data-pay="${o.id}">+ Payment</button>
+            <button class="btn sm inv" data-oid="${o.id}">View details</button>
+            <button class="wa-client-btn" data-waclient="${o.id}">📲 WhatsApp</button>
+            <button class="btn sm danger" data-delord="${o.id}" style="margin-left:auto">🗑</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('addOrderBtn').onclick=()=>{editOrderId=null;orderItems=[];orderView='form';renderOrders();};
+  document.querySelectorAll('[data-oid]').forEach(b=>b.onclick=()=>{orderDetailId=b.dataset.oid;orderView='detail';renderOrders();});
+  document.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{orderDetailId=b.dataset.pay;orderView='detail';renderOrders();setTimeout(()=>{const pb=document.getElementById('addPayBtn');if(pb)pb.click();},200);});
+  document.querySelectorAll('[data-waclient]').forEach(b=>b.onclick=()=>{const o=orders.find(x=>x.id===b.dataset.waclient);if(o)shareClientWhatsApp(o);});
+  document.querySelectorAll('[data-delord]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this order?'))return;await dbDelete('orders',b.dataset.delord);orders=orders.filter(o=>o.id!==b.dataset.delord);renderOrders();showToast('Order deleted');});
+}
+
+function renderOrderForm(){
+  const o=editOrderId?orders.find(x=>x.id===editOrderId):{};
+  const today=new Date().toISOString().slice(0,10);
+  const allItems=[];
+  containers.forEach(c=>(c.items||[]).forEach(it=>{allItems.push({containerNo:c.container_no,containerId:c.id,colorName:it.colorName,finish:it.finish,thickness:it.thickness,availQty:availQty(it)});}));
+  return`<div class="wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+      <button class="btn" id="backOrderBtn">← Back</button>
+      <h2 style="font-size:16px;font-weight:700">${editOrderId?'Edit order':'New client order'}</h2>
+    </div>
+    <div style="background:#fff;border:0.5px solid #e0e0da;border-radius:14px;padding:1.5rem">
+      <div class="form-grid" style="margin-bottom:1rem">
+        <div class="fg full"><label>Client name *</label><input id="oc_name" placeholder="e.g. Pepe Rodriguez" value="${o.client_name||''}"></div>
+        <div class="fg"><label>Phone / WhatsApp</label><input id="oc_phone" placeholder="+57 300 000 0000" value="${o.client_phone||''}"></div>
+        <div class="fg"><label>Order date</label><input type="date" id="oc_date" value="${o.order_date||today}"></div>
+        <div class="fg"><label>Currency</label><select id="oc_currency"><option value="USD"${(o.currency||'USD')==='USD'?' selected':''}>USD</option><option value="COP"${o.currency==='COP'?' selected':''}>COP</option></select></div>
+        <div class="fg"><label>Balance due date</label><input type="date" id="oc_baldate" value="${o.balance_due_date||''}"></div>
+        <div class="fg full"><label>Notes</label><input id="oc_notes" placeholder="Special instructions..." value="${o.notes||''}"></div>
+      </div>
+      <div style="margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="font-size:13px">Materials ordered</strong>
+          <button class="btn sm primary" id="addOrderItemBtn">+ Add</button>
+        </div>
+        <div id="orderItemsSection">${renderOrderItemsTable(allItems)}</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="backOrderBtn2">Cancel</button>
+        <button class="btn primary" id="saveOrderBtn">✓ ${editOrderId?'Save changes':'Create order'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderOrderItemsTable(allItems){
+  const rows=orderItems.map((it,i)=>{
+    const opts=allItems.map(a=>`<option value="${a.containerId}|${a.colorName}|${a.finish}|${a.thickness}" ${(it.containerId===a.containerId&&it.colorName===a.colorName)?'selected':''}>${a.containerNo} — ${a.colorName} ${a.finish||''} (${a.availQty.toFixed(1)} m²)</option>`).join('');
+    return`<tr>
+      <td colspan="2"><select class="oi-product" data-i="${i}" style="width:100%;font-size:12px;height:32px;border:0.5px solid #ccc;border-radius:8px;padding:0 8px;font-family:inherit"><option value="">Select material...</option>${opts}</select></td>
+      <td><input type="number" class="oi-qty" data-i="${i}" value="${it.qty||''}" placeholder="m²" style="width:65px;height:32px;border:0.5px solid #ccc;border-radius:8px;padding:0 6px;font-size:13px;font-family:inherit"></td>
+      <td><input type="number" class="oi-price" data-i="${i}" value="${it.unit_price||''}" placeholder="price" style="width:75px;height:32px;border:0.5px solid #ccc;border-radius:8px;padding:0 6px;font-size:13px;font-family:inherit"></td>
+      <td style="font-weight:700;font-size:12px;white-space:nowrap" class="oi-sub" data-i="${i}">${it.qty&&it.unit_price?'$'+(Number(it.qty)*Number(it.unit_price)).toFixed(2):'—'}</td>
+      <td><button class="btn sm danger oi-del" data-i="${i}">🗑</button></td>
+    </tr>`;
+  }).join('');
+  const total=orderItems.reduce((s,it)=>s+(Number(it.qty||0)*Number(it.unit_price||0)),0);
+  return`<div style="overflow:auto"><table class="items-tbl"><thead><tr><th colspan="2">Product</th><th>Qty m²</th><th>Price/m²</th><th>Subtotal</th><th style="width:36px"></th></tr></thead><tbody>${rows}</tbody></table></div>${total>0?`<div style="text-align:right;font-size:14px;font-weight:700;margin-top:8px;color:#185FA5">Total: $${total.toFixed(2)}</div>`:''}`;
+}
+
+function bindOrderForm(){
+  const o=editOrderId?orders.find(x=>x.id===editOrderId):{};
+  orderItems=o.items?JSON.parse(JSON.stringify(o.items)):[];
+  const allItems=[];
+  containers.forEach(c=>(c.items||[]).forEach(it=>{allItems.push({containerNo:c.container_no,containerId:c.id,colorName:it.colorName,finish:it.finish,thickness:it.thickness,availQty:availQty(it)});}));
+  document.getElementById('backOrderBtn').onclick=()=>{orderView='list';renderOrders();};
+  document.getElementById('backOrderBtn2').onclick=()=>{orderView='list';renderOrders();};
+  document.getElementById('saveOrderBtn').onclick=saveOrderRec;
+  document.getElementById('addOrderItemBtn').onclick=()=>{orderItems.push({containerId:'',colorName:'',finish:'',thickness:'',qty:'',unit_price:''});const s=document.getElementById('orderItemsSection');if(s){s.innerHTML=renderOrderItemsTable(allItems);bindOrderItems(allItems);}};
+  bindOrderItems(allItems);
+}
+
+function bindOrderItems(allItems){
+  document.querySelectorAll('.oi-product').forEach(sel=>sel.onchange=e=>{const i=Number(e.target.dataset.i);const val=e.target.value;if(val){const[cid,colorName,finish,thickness]=val.split('|');orderItems[i]={...orderItems[i],containerId:cid,colorName,finish,thickness};}});
+  document.querySelectorAll('.oi-qty').forEach(inp=>inp.oninput=e=>{orderItems[Number(e.target.dataset.i)].qty=e.target.value;updateOrderTotals(allItems);});
+  document.querySelectorAll('.oi-price').forEach(inp=>inp.oninput=e=>{orderItems[Number(e.target.dataset.i)].unit_price=e.target.value;updateOrderTotals(allItems);});
+  document.querySelectorAll('.oi-del').forEach(btn=>btn.onclick=()=>{orderItems.splice(Number(btn.dataset.i),1);const s=document.getElementById('orderItemsSection');if(s){s.innerHTML=renderOrderItemsTable(allItems);bindOrderItems(allItems);}});
+}
+
+function updateOrderTotals(allItems){
+  const total=orderItems.reduce((s,it)=>s+(Number(it.qty||0)*Number(it.unit_price||0)),0);
+  document.querySelectorAll('.oi-sub').forEach(td=>{const i=Number(td.dataset.i);const it=orderItems[i];if(it)td.textContent=it.qty&&it.unit_price?'$'+(Number(it.qty)*Number(it.unit_price)).toFixed(2):'—';});
+  const el=document.getElementById('orderItemsSection');
+  if(el){const totalEl=el.querySelector('.order-total-display');if(totalEl)totalEl.textContent=total>0?'Total: $'+total.toFixed(2):'';}
+}
+
+async function saveOrderRec(){
+  const name=gv('oc_name').trim();if(!name){alert('Client name is required.');return;}
+  const total=orderItems.reduce((s,it)=>s+(Number(it.qty||0)*Number(it.unit_price||0)),0);
+  const existing=editOrderId?orders.find(x=>x.id===editOrderId):{};
+  const rec={id:editOrderId||Date.now().toString(),client_name:name,client_phone:gv('oc_phone').trim(),order_date:gv('oc_date'),currency:gv('oc_currency'),balance_due_date:gv('oc_baldate')||null,notes:gv('oc_notes').trim(),total_usd:total,items:orderItems,payments:existing.payments||[],seller:currentSeller,created_at:existing.created_at||new Date().toISOString()};
+  const btn=document.getElementById('saveOrderBtn');btn.disabled=true;btn.textContent='Saving...';
+  await dbSave('orders',rec);
+  if(editOrderId)orders=orders.map(o=>o.id===editOrderId?rec:o);else orders.unshift(rec);
+  orderView='list';editOrderId=null;orderItems=[];renderOrders();showToast('✓ Order saved');
+}
+
+function renderOrderDetail(){
+  const o=orders.find(x=>x.id===orderDetailId);if(!o)return'<div class="empty">Not found.</div>';
+  const paid=paidTotal(o);const balance=balanceDue(o);const today=new Date().toISOString().slice(0,10);
+  return`<div class="wrap">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="btn" id="backODetail">← Back</button>
+      <h2 style="font-size:16px;font-weight:700">${o.client_name}</h2>
+      ${orderStatusBadge(o)}
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="wa-client-btn" id="waClientBtn">📲 WhatsApp</button>
+        <button class="btn sm" id="editOBtn">✏️</button>
+      </div>
+    </div>
+    <div class="detail-section"><h3>Client info</h3>
+      <div class="kv">
+        <span class="kv-label">Name</span><span class="kv-val">${o.client_name}</span>
+        <span class="kv-label">Phone</span><span class="kv-val">${o.client_phone||'—'}</span>
+        <span class="kv-label">Order date</span><span class="kv-val">${fmt(o.order_date)}</span>
+        <span class="kv-label">Seller</span><span class="kv-val">${o.seller||'—'}</span>
+        <span class="kv-label">Currency</span><span class="kv-val">${o.currency||'USD'}</span>
+        <span class="kv-label">Notes</span><span class="kv-val">${o.notes||'—'}</span>
+      </div>
+    </div>
+    <div class="detail-section"><h3>Materials ordered</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da">Product</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:right">Qty m²</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:right">Price/m²</th>
+          <th style="padding:6px 8px;background:transparent;font-size:11px;font-weight:700;color:#888;border-bottom:0.5px solid #e0e0da;text-align:right">Subtotal</th>
+        </tr></thead>
+        <tbody>
+          ${(o.items||[]).map(it=>`<tr>
+            <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee"><strong>${it.colorName||'—'}</strong><div style="font-size:11px;color:#888">${[it.finish,it.thickness].filter(Boolean).join(' · ')}</div></td>
+            <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee;text-align:right">${it.qty} m²</td>
+            <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee;text-align:right">${money(it.unit_price,o.currency||'USD')}</td>
+            <td style="padding:7px 8px;border-bottom:0.5px solid #f0f0ee;text-align:right;font-weight:600">${money(Number(it.qty||0)*Number(it.unit_price||0),o.currency||'USD')}</td>
+          </tr>`).join('')}
+        </tbody>
+        <tfoot><tr>
+          <td colspan="3" style="padding:8px;font-weight:700;text-align:right">Total:</td>
+          <td style="padding:8px;font-weight:700;color:#185FA5;text-align:right">${money(o.total_usd,o.currency||'USD')}</td>
+        </tr></tfoot>
+      </table>
+    </div>
+    <div class="detail-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="margin:0">Payment history</h3>
+        <button class="btn sm success" id="addPayBtn">+ Add payment</button>
+      </div>
+      ${(o.payments||[]).length===0?'<p style="font-size:13px;color:#888">No payments yet.</p>':''}
+      ${(o.payments||[]).map(p=>`
+        <div class="pay-row">
+          <div>
+            <strong>${money(p.amount,o.currency||'USD')}</strong>
+            <span style="color:#888;font-size:12px;margin-left:8px">${fmt(p.date)}</span>
+            <span style="background:#f0f0ee;border-radius:6px;padding:1px 6px;font-size:11px;margin-left:4px">${p.method||''}</span>
+            ${p.note?`<div style="font-size:11px;color:#888;margin-top:2px">${p.note}</div>`:''}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="font-size:11px;color:#888">by ${p.by||'—'}</span>
+            <button class="btn sm danger" data-delpay="${p.id}">🗑</button>
+          </div>
+        </div>`).join('')}
+      <div class="order-amounts" style="margin-top:12px;padding-top:12px;border-top:0.5px solid #e0e0da">
+        <div class="amount-box"><label>Total order</label><strong>${money(o.total_usd,o.currency||'USD')}</strong></div>
+        <div class="amount-box"><label>Total paid</label><strong style="color:#3B6D11">${money(paid,o.currency||'USD')}</strong></div>
+        <div class="amount-box"><label>Balance due</label><strong style="color:${balance>0?'#BA7517':'#3B6D11'}">${money(balance,o.currency||'USD')}</strong></div>
+        ${o.balance_due_date?`<div class="amount-box"><label>Due date</label><strong style="color:${o.balance_due_date<today&&balance>0?'#A32D2D':'#1a1a1a'}">${fmt(o.balance_due_date)}</strong></div>`:''}
+      </div>
+      <div id="addPayForm" style="display:none;background:#f8f8f6;border-radius:10px;padding:14px;margin-top:12px">
+        <strong style="font-size:13px;display:block;margin-bottom:10px">Record payment</strong>
+        <div class="form-grid">
+          <div class="fg"><label>Amount (${o.currency||'USD'})</label><input type="number" id="pay_amount" placeholder="0.00"></div>
+          <div class="fg"><label>Date</label><input type="date" id="pay_date" value="${today}"></div>
+          <div class="fg"><label>Method</label><select id="pay_method"><option>Bank transfer</option><option>Cash</option><option>Check</option><option>Other</option></select></div>
+          <div class="fg"><label>Note</label><input id="pay_note" placeholder="Receipt #, reference..."></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" id="cancelPayBtn">Cancel</button>
+          <button class="btn success" id="confirmPayBtn">✓ Save payment</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindOrderDetail(){
+  const o=orders.find(x=>x.id===orderDetailId);
+  document.getElementById('backODetail').onclick=()=>{orderView='list';renderOrders();};
+  document.getElementById('editOBtn').onclick=()=>{editOrderId=orderDetailId;orderItems=o.items?JSON.parse(JSON.stringify(o.items)):[];orderView='form';renderOrders();};
+  document.getElementById('waClientBtn').onclick=()=>shareClientWhatsApp(o);
+  const apb=document.getElementById('addPayBtn');const apf=document.getElementById('addPayForm');
+  if(apb)apb.onclick=()=>{apf.style.display='block';apb.style.display='none';};
+  const cpb=document.getElementById('cancelPayBtn');if(cpb)cpb.onclick=()=>{apf.style.display='none';apb.style.display='';};
+  const cfb=document.getElementById('confirmPayBtn');
+  if(cfb)cfb.onclick=async()=>{
+    const amount=gv('pay_amount');if(!amount||Number(amount)<=0){alert('Enter a valid amount.');return;}
+    if(!o.payments)o.payments=[];
+    o.payments.push({id:Date.now().toString(),amount:Number(amount),date:gv('pay_date'),method:gv('pay_method'),note:gv('pay_note').trim(),by:currentSeller});
+    cfb.disabled=true;cfb.textContent='Saving...';
+    await dbSave('orders',o);orders=orders.map(x=>x.id===o.id?o:x);
+    showToast('✓ Payment recorded');renderOrders();
+  };
+  document.querySelectorAll('[data-delpay]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this payment?'))return;o.payments=(o.payments||[]).filter(p=>p.id!==b.dataset.delpay);await dbSave('orders',o);orders=orders.map(x=>x.id===o.id?o:x);renderOrders();});
+}
+
+
+// ── PROSPECTS ─────────────────────────────────────────────────────────────────
+function saveProspects(){localStorage.setItem('ct_prospects_v1',JSON.stringify(prospects));}
+
+function prospectStatusBadge(status){
+  const labels={new:'Not visited',visited:'Visited',interested:'Interested',client:'Became client',notinterested:'Not interested'};
+  const classes={new:'ps-new',visited:'ps-visited',interested:'ps-interested',client:'ps-client',notinterested:'ps-notinterested'};
+  return`<span class="order-status ${classes[status]||'ps-new'}">${labels[status]||'New'}</span>`;
+}
+
+function renderProspects(){
+  currentTab='prospects';
+  const filtered=prospects.filter(p=>{
+    const q=prospectSearch.toLowerCase();
+    const mQ=!q||p.company.toLowerCase().includes(q)||(p.address||'').toLowerCase().includes(q)||(p.phone||'').toLowerCase().includes(q);
+    const mS=prospectFilter==='all'||p.status===prospectFilter;
+    return mQ&&mS;
+  });
+  const counts={new:prospects.filter(p=>p.status==='new').length,visited:prospects.filter(p=>p.status==='visited').length,interested:prospects.filter(p=>p.status==='interested').length,client:prospects.filter(p=>p.status==='client').length};
+
+  document.getElementById('root').innerHTML=`
+    <div class="wrap">
+      <div class="topbar">
+        <h1>🎯 Prospects</h1>
+        <div class="topbar-actions">
+          <button class="btn primary" id="addProspectBtn">+ <span>Add prospect</span></button>
+        </div>
+      </div>
+      ${navHTML('prospects')}
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Total</div><div class="stat-val blue">${prospects.length}</div></div>
+        <div class="stat"><div class="stat-label">Not visited</div><div class="stat-val" style="color:#185FA5">${counts.new}</div></div>
+        <div class="stat"><div class="stat-label">Interested</div><div class="stat-val green">${counts.interested}</div></div>
+        <div class="stat"><div class="stat-label">Became client</div><div class="stat-val" style="color:#3C3489">${counts.client}</div></div>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="psrch" placeholder="Search company, address..." value="${prospectSearch}" style="flex:1;min-width:120px;max-width:220px">
+        <select id="pfilt">
+          <option value="all"${prospectFilter==='all'?' selected':''}>All</option>
+          <option value="new"${prospectFilter==='new'?' selected':''}>Not visited</option>
+          <option value="visited"${prospectFilter==='visited'?' selected':''}>Visited</option>
+          <option value="interested"${prospectFilter==='interested'?' selected':''}>Interested</option>
+          <option value="client"${prospectFilter==='client'?' selected':''}>Became client</option>
+          <option value="notinterested"${prospectFilter==='notinterested'?' selected':''}>Not interested</option>
+        </select>
+      </div>
+      ${filtered.length===0?`<div class="empty">🎯<br><br>No prospects found.</div>`:
+        filtered.map(p=>`
+        <div class="prospect-card">
+          <div class="order-card-header">
+            <span class="order-client">${p.company}</span>
+            ${prospectStatusBadge(p.status||'new')}
+          </div>
+          <div class="order-meta">
+            ${p.address?`<span>📍 ${p.address}</span>`:''}
+            ${p.phone?`<span>📞 ${p.phone}</span>`:''}
+          </div>
+          ${p.notes?`<div style="font-size:12px;color:#888;margin-top:4px;font-style:italic">${p.notes}</div>`:''}
+          ${p.visits&&p.visits.length>0?`<div style="font-size:11px;color:#888;margin-top:6px">Last visit: ${p.visits[p.visits.length-1].date} by ${p.visits[p.visits.length-1].seller}</div>`:''}
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            ${p.phone?`<button class="wa-client-btn" data-waprospect="${p.id}">📲 WhatsApp</button>`:''}
+            <button class="btn sm inv" data-pdetail="${p.id}">+ Visit note</button>
+            <button class="btn sm" data-pedit="${p.id}">✏️</button>
+            <button class="btn sm danger" data-pdel="${p.id}" style="margin-left:auto">🗑</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+
+  document.getElementById('addProspectBtn').onclick=()=>openProspectForm(null);
+  document.getElementById('psrch').oninput=e=>{prospectSearch=e.target.value;renderProspects();};
+  document.getElementById('pfilt').onchange=e=>{prospectFilter=e.target.value;renderProspects();};
+  document.querySelectorAll('[data-waprospect]').forEach(b=>b.onclick=()=>{const p=prospects.find(x=>x.id===b.dataset.waprospect);if(p&&p.phone){const num=p.phone.replace(/[^0-9+]/g,'');const msg=`Hola ${p.company}! Somos importadores de mármol, granito y piedra sinterizada directamente de China. Nos gustaría presentarles nuestro catálogo. ¿Tendría un momento para hablar?`;window.open('https://wa.me/57'+num+'?text='+encodeURIComponent(msg),'_blank');}});
+  document.querySelectorAll('[data-pdetail]').forEach(b=>b.onclick=()=>{prospectDetailId=b.dataset.pdetail;openProspectDetail();});
+  document.querySelectorAll('[data-pedit]').forEach(b=>b.onclick=()=>openProspectForm(b.dataset.pedit));
+  document.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{if(!confirm('Delete this prospect?'))return;prospects=prospects.filter(p=>p.id!==b.dataset.pdel);saveProspects();renderProspects();showToast('Deleted');});
+}
+
+function openProspectDetail(){
+  const p=prospects.find(x=>x.id===prospectDetailId);if(!p)return;
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('detailModal').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+      <h2 style="font-size:16px;font-weight:700;margin:0">${p.company}</h2>
+      ${prospectStatusBadge(p.status||'new')}
+      <button class="btn sm" id="pdclose" style="margin-left:auto">✕</button>
+    </div>
+    <div class="detail-section"><h3>Contact info</h3>
+      <div class="kv">
+        <span class="kv-label">Address</span><span class="kv-val">${p.address||'—'}</span>
+        <span class="kv-label">Phone</span><span class="kv-val">${p.phone||'—'}</span>
+        <span class="kv-label">Status</span><span class="kv-val">${p.status||'new'}</span>
+        <span class="kv-label">Notes</span><span class="kv-val">${p.notes||'—'}</span>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="margin:0">Visit history</h3>
+        <button class="btn sm success" id="addVisitBtn">+ Add visit</button>
+      </div>
+      ${(p.visits||[]).length===0?'<p style="font-size:13px;color:#888">No visits recorded yet.</p>':''}
+      ${(p.visits||[]).map(v=>`
+        <div class="visit-row">
+          <div style="display:flex;justify-content:space-between">
+            <strong>${fmt(v.date)}</strong>
+            <span style="font-size:11px;color:#888">by ${v.seller||'—'}</span>
+          </div>
+          <div style="font-size:13px;color:#444;margin-top:2px">${v.notes||''}</div>
+          <div style="margin-top:4px">${prospectStatusBadge(v.outcome||'visited')}</div>
+        </div>`).join('')}
+      <div id="visitForm" style="display:none;background:#f8f8f6;border-radius:10px;padding:14px;margin-top:12px">
+        <div class="form-grid" style="margin-bottom:10px">
+          <div class="fg"><label>Visit date</label><input type="date" id="v_date" value="${today}"></div>
+          <div class="fg"><label>Outcome</label>
+            <select id="v_outcome">
+              <option value="visited">Visited</option>
+              <option value="interested">Interested</option>
+              <option value="client">Became client</option>
+              <option value="notinterested">Not interested</option>
+            </select>
+          </div>
+          <div class="fg full"><label>Notes</label><input id="v_notes" placeholder="What happened? Who did you speak to?"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="cancelVisitBtn">Cancel</button>
+          <button class="btn success" id="saveVisitBtn">✓ Save visit</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('pdclose').onclick=()=>document.getElementById('detailOverlay').classList.remove('open');
+  const avb=document.getElementById('addVisitBtn');const vf=document.getElementById('visitForm');
+  avb.onclick=()=>{vf.style.display='block';avb.style.display='none';};
+  document.getElementById('cancelVisitBtn').onclick=()=>{vf.style.display='none';avb.style.display='';};
+  document.getElementById('saveVisitBtn').onclick=()=>{
+    const outcome=gv('v_outcome');
+    if(!p.visits)p.visits=[];
+    p.visits.push({id:Date.now().toString(),date:gv('v_date'),notes:gv('v_notes').trim(),outcome,seller:currentSeller});
+    p.status=outcome;
+    const idx=prospects.findIndex(x=>x.id===p.id);if(idx>=0)prospects[idx]=p;
+    saveProspects();
+    document.getElementById('detailOverlay').classList.remove('open');
+    renderProspects();showToast('✓ Visit recorded');
+  };
+}
+
+function openProspectForm(id){
+  const p=id?prospects.find(x=>x.id===id):{};
+  document.getElementById('formModal').innerHTML=`
+    <h2>${id?'✏️ Edit prospect':'➕ Add prospect'}</h2>
+    <div class="form-grid">
+      <div class="fg full"><label>Company name *</label><input id="pf_company" placeholder="e.g. Mármoles González" value="${p.company||''}"></div>
+      <div class="fg full"><label>Address</label><input id="pf_address" placeholder="Cra. 50 #40-83, Medellín" value="${p.address||''}"></div>
+      <div class="fg"><label>Phone / WhatsApp</label><input id="pf_phone" placeholder="604 xxx xxxx" value="${p.phone||''}"></div>
+      <div class="fg"><label>Status</label>
+        <select id="pf_status">
+          <option value="new"${(p.status||'new')==='new'?' selected':''}>Not visited</option>
+          <option value="visited"${p.status==='visited'?' selected':''}>Visited</option>
+          <option value="interested"${p.status==='interested'?' selected':''}>Interested</option>
+          <option value="client"${p.status==='client'?' selected':''}>Became client</option>
+          <option value="notinterested"${p.status==='notinterested'?' selected':''}>Not interested</option>
+        </select>
+      </div>
+      <div class="fg full"><label>Notes</label><textarea id="pf_notes" placeholder="Any notes about this company...">${p.notes||''}</textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="cancelProspectBtn">Cancel</button>
+      <button class="btn primary" id="saveProspectBtn">✓ ${id?'Save changes':'Add prospect'}</button>
+    </div>`;
+  document.getElementById('formOverlay').classList.add('open');
+  document.getElementById('cancelProspectBtn').onclick=()=>document.getElementById('formOverlay').classList.remove('open');
+  document.getElementById('saveProspectBtn').onclick=()=>{
+    const company=gv('pf_company').trim();if(!company){alert('Company name is required.');return;}
+    const rec={id:id||Date.now().toString(),company,address:gv('pf_address').trim(),phone:gv('pf_phone').trim(),status:gv('pf_status'),notes:gv('pf_notes').trim(),visits:p.visits||[]};
+    if(id){prospects=prospects.map(x=>x.id===id?rec:x);}else{prospects.unshift(rec);}
+    saveProspects();
+    document.getElementById('formOverlay').classList.remove('open');
+    renderProspects();showToast('✓ Prospect saved');
+  };
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────────
+function exportCSV(){
+  const rows=[];
+  containers.forEach(c=>{
+    if(!c.items||!c.items.length){rows.push([c.container_no,c.material||'',c.client||'',c.origin||'','','','','','',sKey(c)].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));}
+    else{c.items.forEach(it=>rows.push([c.container_no,c.material||'',c.client||'',c.origin||'',it.colorName||'',it.finish||'',it.thickness||'',Number(it.qty||0).toFixed(1),availQty(it).toFixed(1),sKey(c)].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')));}
+  });
+  const h='"Container #","Material","Client","Origin","Color","Finish","Thickness","Total m²","Available m²","Status"';
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h,...rows].join('\n'));a.download='stock_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+// ── START ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
